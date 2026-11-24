@@ -1,0 +1,88 @@
+{
+ "about": "에디터 UI 탭에서 만든 화면 배치와 글자 설정이에요. 게임(index.html)이 읽어요. 좌표는 1280×720 화면 기준이에요.",
+ "version": 1,
+ "gameTitle": "보금자리",
+ "titleBgm": "",
+ "dialogBox": {
+  "x": 48,
+  "y": 488,
+  "w": 1184,
+  "h": 196
+ },
+ "dialogText": {
+  "x": 96,
+  "y": 516,
+  "w": 1095,
+  "h": 132
+ },
+ "nameBox": {
+  "x": 48,
+  "y": 444,
+  "w": 160,
+  "h": 44
+ },
+ "choice": {
+  "x": 260,
+  "y": 352,
+  "w": 760,
+  "h": 64
+ },
+ "settingButton": {
+  "x": 1200,
+  "y": 24,
+  "w": 56,
+  "h": 56
+ },
+ "titleLogo": {
+  "x": 96,
+  "y": 120,
+  "w": 900,
+  "h": 300
+ },
+ "titleMenu": {
+  "x": 96,
+  "y": 439
+ },
+ "endingTitle": {
+  "x": 140,
+  "y": 220,
+  "w": 1000,
+  "h": 220
+ },
+ "endingButton": {
+  "x": 530,
+  "y": 500,
+  "w": 220,
+  "h": 60
+ },
+ "fonts": {
+  "dialog": {
+   "size": 28,
+   "color": ""
+  },
+  "name": {
+   "size": 26,
+   "color": "#000000"
+  },
+  "choice": {
+   "size": 28,
+   "color": ""
+  },
+  "title": {
+   "size": 104,
+   "color": ""
+  },
+  "menu": {
+   "size": 34,
+   "color": ""
+  },
+  "ending": {
+   "size": 64,
+   "color": ""
+  },
+  "endButton": {
+   "size": 20,
+   "color": ""
+  }
+ }
+}

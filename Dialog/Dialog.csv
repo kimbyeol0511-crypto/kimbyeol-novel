@@ -1,0 +1,123 @@
+﻿id,scene,type,speaker,expression,text,next,cond_flag,cond_state,set_flag,bg,bgm,sfx,sfx_loop,memo,portrait,expr_code,bgm_path,sfx_path,check
+ID,장면,구분,캐릭터,표정,텍스트 (대사 / 선택지 문구 / 엔딩 제목),다음 ID,조건 플래그,조건 상태,켜는 플래그,배경,BGM (루프),SFX,SFX 반복 (Y),메모,portraitPath (자동),표정 코드 (자동),BGM 경로 (자동),SFX 경로 (자동),자동 점검
+S1-010,1. 낡은 은신처,대사,내레이터,기본,잿빛 구름이 낮게 깔린 오후 4시. 무너진 편의점 셔터 안쪽엔 눅눅한 먼지 냄새와 빗소리만이 가득하다.,,,,,bg_shelter_rain,MAIN,sfx_rain_loop,Y,,Characters/Narrator,default,Sounds/BGM/quiet_rain.mp3,Sounds/SFX/rain_loop.wav,✓
+S1-020,1. 낡은 은신처,대사,챠칸 이스벨,기본,"불러도 안 오고. 
+아까부터 구석에서 뭐해요?",,,,,,,sfx_rain_loop,Y,,Characters/ChyakanIsbel,default,,Sounds/SFX/rain_loop.wav,✓
+S1-030,1. 낡은 은신처,대사,제럴드 앤더슨,화남,"까, 깜짝이야···.  언제 왔어요?
+발소리도 전혀 안들렸는데···.",,,,,,,sfx_rain_loop,Y,,Characters/GeraldAnderson,angry,,Sounds/SFX/rain_loop.wav,✓
+S1-040,1. 낡은 은신처,대사,챠칸 이스벨,웃음,"무슨 생각을 그렇게 하길래 아무것도 못들어요? 
+정신이 딴 곳에 가있는 것 같아.",,,,,,,sfx_rain_loop,Y,,Characters/ChyakanIsbel,smile,,Sounds/SFX/rain_loop.wav,✓
+S1-050,1. 낡은 은신처,대사,제럴드 앤더슨,기본,밖에서 긁는 소리가 나서···. 셔터 틈새로 좀비가 들어오는 줄 알았어요.,,,,,,,sfx_rain_loop,Y,,Characters/GeraldAnderson,default,,Sounds/SFX/rain_loop.wav,✓
+S1-060,1. 낡은 은신처,대사,챠칸 이스벨,기본,"에이, 그냥 바람에 간판 흔들리는 소리겠죠. 그러지말고, 이거 마셔요. 아껴 둔 마지막 생수예요.",,,,,,,sfx_rain_loop,Y,,Characters/ChyakanIsbel,default,,Sounds/SFX/rain_loop.wav,✓
+S1-070,1. 낡은 은신처,대사,제럴드 앤더슨,기본,"···! 안돼요, 이건 약 먹을 때 마실 물이잖아요. 얼굴이 창백한데, 오늘 약은 먹었어요?",,,,,,,sfx_rain_loop,Y,,Characters/GeraldAnderson,default,,Sounds/SFX/rain_loop.wav,✓
+S1-080,1. 낡은 은신처,대사,챠칸 이스벨,웃음,(눈썰미가 많이 늘었네···) 어제 먹었던 약이 마지막이었어요. 그러니까 맘 편하게 그냥 마셔요.,,,,,,,sfx_rain_loop,Y,,Characters/ChyakanIsbel,smile,,Sounds/SFX/rain_loop.wav,✓
+S1-090,1. 낡은 은신처,대사,제럴드 앤더슨,주눅,"뭐······? 약이 다 떨어졌다고요? 그, 그럼 열 오르면 어떡해요! 저번에도 쓰러져서 사흘이나 아팠는데···!",,,,,,,sfx_rain_loop,Y,,Characters/GeraldAnderson,timid,,Sounds/SFX/rain_loop.wav,✓
+S1-100,1. 낡은 은신처,대사,챠칸 이스벨,기본,"(속으론 어지러움이 가시지 않지만, 제럴드가 패닉에 빠질까 봐 일부러 어깨를 으쓱해 보인다.)",,,,,,,sfx_rain_loop,Y,,Characters/ChyakanIsbel,default,,Sounds/SFX/rain_loop.wav,✓
+S1-110,1. 낡은 은신처,대사,챠칸 이스벨,웃음,"걱정마요, 나 그렇게 약골 아니에요. 그래도 해 지기 전에 건너편에 있는 약국은 가긴 해야하는데···.",,,,,,,sfx_rain_loop,Y,,Characters/ChyakanIsbel,smile,,Sounds/SFX/rain_loop.wav,✓
+S1-120,1. 낡은 은신처,대사,제럴드 앤더슨,기본,"아······. 그쵸, 가야죠. 가야하는데···.",,,,,,,sfx_rain_loop,Y,,Characters/GeraldAnderson,default,,Sounds/SFX/rain_loop.wav,✓
+S1-130,1. 낡은 은신처,대사,챠칸 이스벨,기본,"(출발 전, 겁에 질려 쇠파이프를 쥔 채 덜덜 떠는 제럴드에게 어떤 말을 건넬까?)",,,,,,,sfx_rain_loop,Y,▼ 선택지 질문 1,Characters/ChyakanIsbel,default,,Sounds/SFX/rain_loop.wav,✓
+S1-140,1. 낡은 은신처,선택지,,,겁먹지 마요! 내가 앞에서 다 쓸어버릴 테니까. 뒤에서 보조만 좀 도와줘요.,S1-160,,,,,,,,,,,,,✓
+S1-150,1. 낡은 은신처,선택지,,,무서운 거 이해해요. 나도 똑같이 겁나니까. 하지만 우리 같이 있으면 다 잘될 거예요.,S1-310,,,FLAG_TRUST_MAX,,,,,해피 루트 신뢰도,,,,,✓
+S1-160,1. 낡은 은신처,대사,제럴드 앤더슨,기본,...그러다가 큰일나요. 저번에도 비슷한 일이 있었던 거 까먹었어요? 나 무섭다고요···.,,,,,,,sfx_rain_loop,Y,,Characters/GeraldAnderson,default,,Sounds/SFX/rain_loop.wav,✓
+S1-170,1. 낡은 은신처,대사,챠칸 이스벨,웃음,"잠깐, 정확하게 말하면 10분은 내 힘으로 뛰고 5분 쉰거였죠!",,,,,,,sfx_rain_loop,Y,,Characters/ChyakanIsbel,smile,,Sounds/SFX/rain_loop.wav,✓
+S1-180,1. 낡은 은신처,대사,제럴드 앤더슨,기본,별로 다를 건 없다고 보는데요. ...같이 가요. 혼자 나가는 건 너무 위험하니까······.,,,,,,,sfx_rain_loop,Y,합류,Characters/GeraldAnderson,default,,Sounds/SFX/rain_loop.wav,✓
+S1-190,2. 빗속의 상가 약국,대사,내레이터,기본,빗줄기가 굵어진 상가 골목. 반쯤 내려앉은 약국 유리문 너머로 진열대 실루엣이 어른거린다.,,,,,bg_pharmacy_dark,bgm_tension,sfx_glass_step,,,Characters/Narrator,default,Sounds/BGM/tension.mp3,Sounds/SFX/glass_step.wav,✓
+S1-200,2. 빗속의 상가 약국,대사,제럴드 앤더슨,주눅,...! 안쪽 조제실 입구가 열려 있어요. 혹시 안에 감염자가 남아있으면 어떡하죠···?,,,,,,,,,,Characters/GeraldAnderson,timid,,,✓
+S1-210,2. 빗속의 상가 약국,대사,챠칸 이스벨,화남,"쉿, 목소리 낮춰요. 내가 매대 쪽에서 해열제랑 항생제 쓸어 담을테니까, 캐비닛 문 좀 뜯어봐요.",,,,,,,,,,Characters/ChyakanIsbel,angry,,,✓
+S1-220,2. 빗속의 상가 약국,대사,제럴드 앤더슨,기본,"알겠어요. 
+좀 무거운데···. 끄응, 으랏차···!",,,,,,,sfx_metal_creak,,,Characters/GeraldAnderson,default,,Sounds/SFX/metal_creak.wav,✓
+S1-230,2. 빗속의 상가 약국,대사,내레이터,충격,깡—! 캐비닛 경첩이 뜯어지는 날카로운 금속음이 좁은 약국 안에 울려 퍼진다.,,,,,,,sfx_loud_clang,,,Characters/Narrator,shock,,Sounds/SFX/loud_clang.wav,✓
+S1-240,2. 빗속의 상가 약국,대사,제럴드 앤더슨,주눅,"헉···! 미, 미안해요! 소리가 이렇게 클 줄은 몰랐는데···!",,,,,,,,,,Characters/GeraldAnderson,timid,,,✓
+S1-250,2. 빗속의 상가 약국,대사,챠칸 이스벨,슬픔,"사과할 시간 없어! 안쪽에서 긁는 소리 들리니까, 챙긴 것만 들고 바로 나가야해요!",,,,,,,,,,Characters/ChyakanIsbel,sad,,,✓
+S1-260,2. 빗속의 상가 약국,대사,내레이터,충격,"그 순간, 어두운 조제실 커튼을 찢고 피투성이 감염자 한 마리가 짐승 같은 괴성을 지르며 튀어나온다!",,,,,,,sfx_zombie_roar,,,Characters/Narrator,shock,,Sounds/SFX/zombie_roar.wav,✓
+S1-270,2. 빗속의 상가 약국,대사,챠칸 이스벨,슬픔,(거리가 너무 가깝다! 낡은 진열대마저 우리 쪽으로 기울어지고 있다. 어떻게 움직일까?),,,,,,,,,▼ 선택지 질문 2 (핵심 분기),Characters/ChyakanIsbel,sad,,,✓
+S1-280,2. 빗속의 상가 약국,선택지,,,(제럴드를 뒤로 밀쳐내고 내가 먼저 진열대를 발로 차 시간을 번다),S1-350,,,FLAG_BITE_CHAKAN,,,,,챠칸 감염 루트,,,,,✓
+S1-290,2. 빗속의 상가 약국,선택지,,,제드! 진열대 기둥을 나랑 같이 밀어요! (힘을 합쳐 감염자를 가둔다),S1-490,,,,,,,,무사 돌파 루트,,,,,✓
+S1-300,2. 빗속의 상가 약국,선택지,,,(순간 호흡이 멎어 발이 굳어버린다),S1-530,,,FLAG_BITE_GERALD,,,,,제럴드 감염 루트,,,,,✓
+S1-310,1. 낡은 은신처,대사,제럴드 앤더슨,기본,"...무서워요. 갑자기 괴물같은 것들이 튀어나오는 것도 무섭고, 사방이 피투성이인 것도 무섭고. ...근데 혼자가 되는 게 더 무서워요.",,,,,,,sfx_rain_loop,Y,,Characters/GeraldAnderson,default,,Sounds/SFX/rain_loop.wav,✓
+S1-320,1. 낡은 은신처,대사,챠칸 이스벨,웃음,나도 똑같은 마음이예요. 전부 무섭지만... 같이 가줄거죠?,,,,,,,sfx_rain_loop,Y,,Characters/ChyakanIsbel,smile,,Sounds/SFX/rain_loop.wav,✓
+S1-330,1. 낡은 은신처,대사,제럴드 앤더슨,화남,"(제럴드가 젖은 머리카락 사이로 붉어진 눈가를 훔치더니, 쇠파이프를 양손으로 꽉 고쳐 잡는다.)",,,,,,,sfx_rain_loop,Y,,Characters/GeraldAnderson,angry,,Sounds/SFX/rain_loop.wav,✓
+S1-340,1. 낡은 은신처,대사,제럴드 앤더슨,기본,하아···. 더 어두워지기 전에 얼른 다녀오자고요.,S1-190,,,,,,sfx_rain_loop,Y,합류,Characters/GeraldAnderson,default,,Sounds/SFX/rain_loop.wav,✓
+S1-350,2. 빗속의 상가 약국,대사,챠칸 이스벨,슬픔,"비켜, 제드! 이쪽이야!",,,,,,,sfx_crash_wood,,챠칸 감염 분기 시작,Characters/ChyakanIsbel,sad,,Sounds/SFX/crash_wood.wav,✓
+S1-360,2. 빗속의 상가 약국,대사,내레이터,충격,"챠칸이 쓰러지는 진열대 틈으로 몸을 날린 찰나, 놈의 거친 손톱과 이빨이 챠칸의 왼쪽 팔뚝 소매를 깊게 찢고 스친다.",,,,,,,sfx_flesh_tear,,,Characters/Narrator,shock,,Sounds/SFX/flesh_tear.wav,✓
+S1-370,2. 빗속의 상가 약국,대사,제럴드 앤더슨,화남,챠이!!! 괜찮아요?! 방금 감염자랑 부딪혔잖아···! 다친 곳은?!,,,,,,,,,,Characters/GeraldAnderson,angry,,,✓
+S1-380,2. 빗속의 상가 약국,대사,챠칸 이스벨,충격,(소매 안쪽으로 뜨거운 피가 배어 나오는 감각이 선명하다. 하지만 제럴드가 보면 그 자리에서 무너질 것이다.),,,,,,,,,,Characters/ChyakanIsbel,shock,,,✓
+S1-390,2. 빗속의 상가 약국,대사,챠칸 이스벨,충격,"옷만 찢어졌고 멀쩡해요. 지금 진열대에 깔려 있으니까 셔터 쪽으로 뛰어요, 빨리!",,,,,,,,,3장으로 합류,Characters/ChyakanIsbel,shock,,,✓
+S1-400,3. 빗속의 귀환길,대사,내레이터,충격,약국을 빠져나오자마자 골목 양쪽 끝에서 빗소리를 뚫고 낮고 기괴한 신음들이 몰려오기 시작한다.,,,,,bg_alley_rain,bgm_climax,,,,Characters/Narrator,shock,Sounds/BGM/climax.mp3,,✓
+S1-410,3. 빗속의 귀환길,대사,챠칸 이스벨,슬픔,젠장···! 아까 캐비닛 소리 때문에 떼로 몰려왔어. 이대로 멈추지말고 은신처 뒷문까지 한 번에 뛰어요!,,,,,,,sfx_footsteps_run,Y,,Characters/ChyakanIsbel,sad,,Sounds/SFX/footsteps_run.wav,✓
+S1-420,3. 빗속의 귀환길,대사,제럴드 앤더슨,주눅,"허억, 허억…… 알았어! 챠이, 절대로 내 손 놓지마요. 절대 놓으면 안 돼……!",,,,,,,sfx_footsteps_run,Y,,Characters/GeraldAnderson,timid,,Sounds/SFX/footsteps_run.wav,✓
+S1-430,3. 빗속의 귀환길,대사,내레이터,기본,"진흙탕과 빗물을 튀기며 전력 질주한 끝에, 마침내 은신처의 낡은 철제 뒷문이 눈앞에 나타난다.",,,,,,,sfx_footsteps_run,Y,,Characters/Narrator,default,,Sounds/SFX/footsteps_run.wav,✓
+S1-440,3. 빗속의 귀환길,대사,챠칸 이스벨,슬픔,"거의 다 왔어···! 아직도 쫓아오고 있잖아, 으으···!",,,,,,,sfx_footsteps_run,Y,,Characters/ChyakanIsbel,sad,,Sounds/SFX/footsteps_run.wav,✓
+S1-450,,분기,,,,S1-850,FLAG_BITE_CHAKAN,켜짐,,,,,,편집기에서 자동 생성,,,,,✓
+S1-460,3. 빗속의 귀환길,대사,챠칸 이스벨,슬픔,(문이 뻑뻑해서 둘이 동시에 들어가려면 몇 초가 걸린다. 코앞까지 놈들이 들이닥쳤다!),,,,,,,,,▼ 선택지 질문 3 (배드엔딩 분기),Characters/ChyakanIsbel,sad,,,✓
+S1-470,3. 빗속의 귀환길,선택지,,,"제드, 먼저 들어가요! 내가 밖에서 시선 끌테니까···!",S1-600,,,,,,,,→ 배드 엔딩,,,,,✓
+S1-480,3. 빗속의 귀환길,선택지,,,"제드, 문 밀어! 같이 밀 테니까 절대 힘 풀지 마!",S1-690,,,,,,,,→ 해피 엔딩 루트,,,,,✓
+S1-490,2. 빗속의 상가 약국,대사,제럴드 앤더슨,주눅,"으아아아악!! 저리 가, 오지 마!!",,,,,,,sfx_crash_wood,,무사 돌파 분기 시작,Characters/GeraldAnderson,timid,,Sounds/SFX/crash_wood.wav,✓
+S1-500,2. 빗속의 상가 약국,대사,내레이터,기본,"챠칸의 구령에 맞춰 제럴드가 온 힘을 다해 철제 진열대를 밀어 넘어뜨리자, 감염자가 그대로 구조물 아래 깔린다.",,,,,,,,,,Characters/Narrator,default,,,✓
+S1-510,2. 빗속의 상가 약국,대사,챠칸 이스벨,웃음,제대로 맞혔다···! 역시 힘 쓰는 건 제드가 최고라니까. 어서 가방 들어요. 이정도 소음이면 이미 몰려오고 있을거에요.,,,,,,,,,,Characters/ChyakanIsbel,smile,,,✓
+S1-520,2. 빗속의 상가 약국,대사,제럴드 앤더슨,화남,"허억, 허억……. 됐, 됐다……. 나 진짜로 막아냈어, 챠이……!",S1-400,,,,,,,,3장으로 합류,Characters/GeraldAnderson,angry,,,✓
+S1-530,2. 빗속의 상가 약국,대사,제럴드 앤더슨,화남,"안 돼!! 챠이, 뒤로 물러나!!",,,,,,,,,제럴드 감염 분기 시작,Characters/GeraldAnderson,angry,,,✓
+S1-540,2. 빗속의 상가 약국,대사,내레이터,충격,겁에 질려 떨던 제럴드가 비명과 함께 몸을 날려 챠칸을 감싸 안고 구른다. 놈의 이빨이 제럴드의 손목 위를 사납게 파고든다.,,,,,,,sfx_flesh_tear,,,Characters/Narrator,shock,,Sounds/SFX/flesh_tear.wav,✓
+S1-550,2. 빗속의 상가 약국,대사,제럴드 앤더슨,충격,"끄으윽……! 저, 저리 꺼져!!",,,,,,,sfx_pipe_hit,,,Characters/GeraldAnderson,shock,,Sounds/SFX/pipe_hit.wav,✓
+S1-560,2. 빗속의 상가 약국,대사,내레이터,기본,제럴드가 울부짖으며 휘두른 쇠파이프에 머리를 맞은 감염자가 그대로 쓰러진다.,,,,,,,,,,Characters/Narrator,default,,,✓
+S1-570,2. 빗속의 상가 약국,대사,챠칸 이스벨,슬픔,"제드, 괜찮아요?! 방금 팔 물렸던 거 아니에요? 빨리 걷어봐요!",,,,,,,,,,Characters/ChyakanIsbel,sad,,,✓
+S1-580,2. 빗속의 상가 약국,대사,제럴드 앤더슨,충격,"(손목에서 흐르는 검은 피를 재빨리 소매로 덮으며, 제럴드가 눈물을 꾹 참은 채 고개를 저었다.)",,,,,,,,,,Characters/GeraldAnderson,shock,,,✓
+S1-590,2. 빗속의 상가 약국,대사,제럴드 앤더슨,충격,"파이프에 긁힌 것 뿐이에요. 그게 중요한게 아니라, 지금은 빨리 은신처로 돌아가야해···!",S1-400,,,,,,,,3장으로 합류,Characters/GeraldAnderson,shock,,,✓
+S1-600,3. 빗속의 귀환길,대사,제럴드 앤더슨,주눅,"그게 무슨 소리예요?! 안돼, 문 안 닫아! 같이 가···!",,,,,,,,,배드엔딩 시작,Characters/GeraldAnderson,timid,,,✓
+S1-610,3. 빗속의 귀환길,대사,챠칸 이스벨,충격,약 가방 꼭 쥐고 있어요. 금방 따돌리고 돌아갈게. 약속해!,,,,,,,,,,Characters/ChyakanIsbel,shock,,,✓
+S1-620,3. 빗속의 귀환길,대사,내레이터,충격,"챠칸이 제럴드를 문 안쪽으로 힘껏 밀어 넣은 뒤, 바깥쪽에서 녹슨 빗장을 걸고 쇠파이프를 두드리며 반대편 골목으로 달려간다.",,,,,,,sfx_door_lock,,,Characters/Narrator,shock,,Sounds/SFX/door_lock.wav,✓
+S1-630,3. 빗속의 귀환길,대사,제럴드 앤더슨,슬픔,"안 돼, 가지 마!! 문 열어, 당장 문 열라고!! 챠이이——!!",,,,,,,,,,Characters/GeraldAnderson,sad,,,✓
+S1-640,8. 홀로 남겨진 계절 (배드),대사,내레이터,슬픔,"철문을 두드리던 비명과 빗소리가 멎고, 차가운 새벽이 찾아왔다. 정문 셔터는 끝내 두드려지지 않았다.",,,,,bg_shelter_dawn_empty,bgm_ending_bad,sfx_rain_loop,,,Characters/Narrator,sad,Sounds/BGM/ending_bad.mp3,Sounds/SFX/rain_loop.wav,✓
+S1-650,8. 홀로 남겨진 계절 (배드),대사,제럴드 앤더슨,슬픔,……거짓말쟁이. 금방 온다면서. 약속한다면서…….,,,,,,,,,,Characters/GeraldAnderson,sad,,,✓
+S1-660,8. 홀로 남겨진 계절 (배드),대사,제럴드 앤더슨,슬픔,"약도 다 구해왔는데……. 이제 네가 아플 일도 없는데, 왜 네가 없어…….",,,,,,,,,,Characters/GeraldAnderson,sad,,,✓
+S1-670,8. 홀로 남겨진 계절 (배드),대사,내레이터,슬픔,"제럴드는 챠칸이 남긴 젖은 외투를 품에 껴안은 채, 텅 빈 편의점 구석에서 무릎을 꿇고 움직이지 않았다. 차라리 함께 죽는 편이 나았을 밤이었다.",,,,,,,,,,Characters/Narrator,sad,,,✓
+S1-680,8. 홀로 남겨진 계절 (배드),엔딩,,,[Bad Ending] 홀로 남겨진 계절,,,,ENDING_BAD,,,,,,,,,,✓
+S1-690,,분기,,,,S1-850,FLAG_BITE_CHAKAN,켜짐,,,,,,편집기에서 자동 생성,,,,,✓
+S1-700,4. 셔터 안쪽의 정적,대사,챠칸 이스벨,기본,"하아, 하아……. 더는 안 쫓아오는 것 같아요. 다행이다···.",,,,,,,,,,Characters/ChyakanIsbel,default,,,✓
+S1-710,,분기,,,,S1-860,FLAG_BITE_GERALD,켜짐,,,,,,편집기에서 자동 생성,,,,,✓
+S1-720,,분기,,,,S1-1020,FLAG_BITE_CHAKAN,켜짐,,,,,,편집기에서 자동 생성,,,,,✓
+S1-730,7. 끝없는 내일을 함께 (해피),대사,내레이터,기본,"잠시 뒤, 폭우가 잦아들고 구름 사이로 옅은 저녁 햇살이 비치기 시작했다. 두 사람은 서로의 얼굴과 팔을 샅샅이 확인한 뒤에야 안도의 한숨을 내쉬었다.",,,,,bg_shelter_sunset,bgm_ending_happy,,,,Characters/Narrator,default,Sounds/BGM/ending_happy.mp3,,✓
+S1-740,7. 끝없는 내일을 함께 (해피),대사,제럴드 앤더슨,슬픔,휴우……. 진짜로 둘 다 안 물렸어……. 다리에 힘이 안들어가요…….,,,,,,,,,,Characters/GeraldAnderson,sad,,,✓
+S1-750,7. 끝없는 내일을 함께 (해피),대사,챠칸 이스벨,웃음,"자, 아까 챙긴 해열제랑 통조림. 오늘 고생한 대가로 제럴드 님께 특식으로 바칩니다.",,,,,,,,,,Characters/ChyakanIsbel,smile,,,✓
+S1-760,7. 끝없는 내일을 함께 (해피),대사,제럴드 앤더슨,화남,유통기한 간당간당한 복숭아 통조림이네요. …내가 제일 좋아하는거다. 약 먹는 거 먼저 보고 먹을게요.,,,,,,,,,,Characters/GeraldAnderson,angry,,,✓
+S1-770,,분기,,,,S1-1160,FLAG_TRUST_MAX,켜짐,,,,,,편집기에서 자동 생성,,,,,✓
+S1-780,,대사,제럴드 앤더슨,기본,…고맙긴요. 내가 더 고맙지.,,,,,,,,,,Characters/GeraldAnderson,default,,,✓
+S1-790,7. 끝없는 내일을 함께 (해피),대사,제럴드 앤더슨,주눅,그럼에도 내일은 내일의 식량을 구하러 가야하네요…. 이 세상은 언제쯤 돌아올까요?,,,,,,,,,,Characters/GeraldAnderson,timid,,,✓
+S1-800,7. 끝없는 내일을 함께 (해피),대사,챠칸 이스벨,기본,"글쎄요, 당장 내일도 엉망진창이겠죠. 물도 부족하고, 바깥엔 여전히 괴물들이 득실거릴 테고.",,,,,,,,,,Characters/ChyakanIsbel,default,,,✓
+S1-810,7. 끝없는 내일을 함께 (해피),대사,챠칸 이스벨,웃음,어쩌겠어요. 옆에 있는 사람 의지하면서 하루하루 살아가야지. 안그래요?,,,,,,,,,,Characters/ChyakanIsbel,smile,,,✓
+S1-820,7. 끝없는 내일을 함께 (해피),대사,제럴드 앤더슨,기본,"맞는 말이네요. 내일도 의지할게요, 챠이도 얼마든지 의지해요. 우리 꼭 끝까지 살아남아봐요.",,,,,,,,,,Characters/GeraldAnderson,default,,,✓
+S1-830,7. 끝없는 내일을 함께 (해피),대사,내레이터,기본,"폐허가 된 도시는 여전히 차갑고 막막했지만, 낡은 셔터 안쪽의 작은 온기만큼은 오늘도 꺼지지 않았다.",,,,,,,,,,Characters/Narrator,default,,,✓
+S1-840,7. 끝없는 내일을 함께 (해피),엔딩,,,[Happy Ending] 끝없는 내일을 함께,,,,ENDING_HAPPY,,,,,,,,,,✓
+S1-850,4. 셔터 안쪽의 정적,대사,내레이터,기본,"철컹—! 묵직한 쇠 빗장이 잠기고, 두 사람은 거친 숨을 몰아쉬며 은신처 바닥에 주저앉았다.",S1-700,,,,bg_shelter_rain,bgm_quiet_rain,sfx_shutter_close,,,Characters/Narrator,default,Sounds/BGM/quiet_rain.mp3,Sounds/SFX/shutter_close.wav,✓
+S1-860,5. 붉은 노을의 약속 (메리배드 A),대사,내레이터,슬픔,"구해온 약 상자를 정리하던 챠칸은, 등 뒤 어두운 구석에서 들려오는 작고 억눌린 흐느낌에 고개를 돌렸다.",,,,,bg_shelter_sunset,bgm_ending_merrybad,sfx_heartbeat,,,Characters/Narrator,sad,Sounds/BGM/ending_merrybad.mp3,Sounds/SFX/heartbeat.wav,✓
+S1-870,5. 붉은 노을의 약속 (메리배드 A),대사,제럴드 앤더슨,슬픔,"끅, 흐윽……. 흑, 제발…… 안 돼, 제발…….",,,,,,,,,,Characters/GeraldAnderson,sad,,,✓
+S1-880,5. 붉은 노을의 약속 (메리배드 A),대사,챠칸 이스벨,화남,제드? 왜 거기서 울고…… 잠깐만. (심각한 표정으로 팔을 붙잡는다),,,,,,,,,,Characters/ChyakanIsbel,angry,,,✓
+S1-890,5. 붉은 노을의 약속 (메리배드 A),대사,내레이터,충격,"다가온 챠칸의 손이 제럴드의 젖은 소매를 걷어 올린 순간, 검붉게 부어오른 선명한 잇자국이 드러났다.",,,,,,,,,,Characters/Narrator,shock,,,✓
+S1-900,5. 붉은 노을의 약속 (메리배드 A),대사,챠칸 이스벨,슬픔,"……이거, 아까 약국에서…….",,,,,,,,,,Characters/ChyakanIsbel,sad,,,✓
+S1-910,5. 붉은 노을의 약속 (메리배드 A),대사,제럴드 앤더슨,슬픔,"미안해요, 숨겨서 미안해요…. 나 진짜 죽기 싫은데, 너무 무서워……!",,,,,,,,,,Characters/GeraldAnderson,sad,,,✓
+S1-920,5. 붉은 노을의 약속 (메리배드 A),대사,제럴드 앤더슨,슬픔,근데 챠이가 다치는 걸 보는건 더 싫단 말이야…. 곧 떠날게요. 꼭 안전하게 살아남아요. 약도 다 챙겨가고 물도 누구한테 양보하지 말고…….,,,,,,,,,,Characters/GeraldAnderson,sad,,,✓
+S1-930,5. 붉은 노을의 약속 (메리배드 A),대사,챠칸 이스벨,슬픔,"(가슴 안쪽이 산산조각 나는 것처럼 아려온다. 하지만 지금 내가 무너지면, 제럴드는 마지막 순간까지 공포에 떨 것이다.)",,,,,,,,,,Characters/ChyakanIsbel,sad,,,✓
+S1-940,5. 붉은 노을의 약속 (메리배드 A),대사,챠칸 이스벨,슬픔,(어떻게 행동할까?),,,,,,,,,▼ 강제 선택지 (연출용),Characters/ChyakanIsbel,sad,,,✓
+S1-950,5. 붉은 노을의 약속 (메리배드 A),선택지,,,(오열하는 제럴드를 품에 꼭 끌어안는다),S1-960,,,,,,,,단일 선택지,,,,,✓
+S1-960,5. 붉은 노을의 약속 (메리배드 A),대사,챠칸 이스벨,웃음,바보예요? 내가 왜 떠나. 너 없이 나 혼자 살아남아서 뭐 해….,,,,,,,,,,Characters/ChyakanIsbel,smile,,,✓
+S1-970,5. 붉은 노을의 약속 (메리배드 A),대사,제럴드 앤더슨,충격,제발……. 괴물이 된 모습을 보여주기 싫어…. 무서워.,,,,,,,,,,Characters/GeraldAnderson,shock,,,✓
+S1-980,5. 붉은 노을의 약속 (메리배드 A),대사,챠칸 이스벨,웃음,……다 괜찮아요. 그냥 옆에 있을래. 손 잡고 있을테니까 같이 한 숨 자요.,,,,,,,,,,Characters/ChyakanIsbel,smile,,,✓
+S1-990,5. 붉은 노을의 약속 (메리배드 A),대사,제럴드 앤더슨,웃음,"흐윽…… 미안해요, 미안해요……. (손을 꽉 붙잡는다)",,,,,,,,,,Characters/GeraldAnderson,smile,,,✓
+S1-1000,5. 붉은 노을의 약속 (메리배드 A),대사,내레이터,기본,비 갠 하늘의 붉은 노을이 셔터 틈새로 스며든다. 서로의 체온에 기댄 두 사람의 그림자는 해가 진 뒤에도 끝내 떨어지지 않았다.,,,,,,,,,,Characters/Narrator,default,,,✓
+S1-1010,5. 붉은 노을의 약속 (메리배드 A),엔딩,,,[Merry Bad Ending A] 노을이 머무는 자리,,,,ENDING_MERRYBAD_A,,,,,,,,,,✓
+S1-1020,6. 거짓말과 온기 (메리배드 B),대사,내레이터,기본,은신처에 돌아온 챠칸은 태연하게 약 상자를 분류하며 콧노래까지 흥얼거렸다. 하지만 제럴드의 시선은 챠칸의 왼쪽 소매에 멈춰 섰다.,,,,,bg_shelter_sunset,bgm_ending_merrybad,sfx_heartbeat,,,Characters/Narrator,default,Sounds/BGM/ending_merrybad.mp3,Sounds/SFX/heartbeat.wav,✓
+S1-1030,6. 거짓말과 온기 (메리배드 B),대사,제럴드 앤더슨,주눅,"……왼쪽 팔, 계속 피가 흐르잖아요.",,,,,,,,,,Characters/GeraldAnderson,timid,,,✓
+S1-1040,6. 거짓말과 온기 (메리배드 B),대사,챠칸 이스벨,충격,"아, 이거요? 아까 진열대에 긁혔어요. 약 바르고 쉬면 나을거예요, 별거 아니니까 걱정 안해도….",,,,,,,,,,Characters/ChyakanIsbel,shock,,,✓
+S1-1050,6. 거짓말과 온기 (메리배드 B),대사,제럴드 앤더슨,화남,……거짓말. 나 바보 아니에요…! 철근에 긁힌 상처면 왜 검은색으로 부어오르는데……!,,,,,,,,,,Characters/GeraldAnderson,angry,,,✓
+S1-1060,6. 거짓말과 온기 (메리배드 B),대사,챠칸 이스벨,충격,"진정해요, 제드. 나 원래 회복 느린 거 알잖아요. 너무 떠는 거 아니에요? 웃겨 진짜….",,,,,,,,,,Characters/ChyakanIsbel,shock,,,✓
+S1-1070,6. 거짓말과 온기 (메리배드 B),대사,제럴드 앤더슨,슬픔,"어떡해, 어떡해……. 이럴 땐 어떻게 해야하지? 치료도 못하는데, 챠이 없이 내가 어떡하라고……. (눈물이 비처럼 쏟아진다)",,,,,,,,,,Characters/GeraldAnderson,sad,,,✓
+S1-1080,6. 거짓말과 온기 (메리배드 B),대사,제럴드 앤더슨,주눅,"차라리 나도 같이 갈래…. 혼자 두고 가지 마, 제발…….",,,,,,,,,,Characters/GeraldAnderson,timid,,,✓
+S1-1090,6. 거짓말과 온기 (메리배드 B),대사,챠칸 이스벨,주눅,"(점점 시야가 흐려지고 열이 끓어오른다. 말리고 싶지만, 저 겁쟁이를 홀로 두고 눈을 감을 수 없다는 걸 챠칸 자신이 가장 잘 알고 있었다.)",,,,,,,,,,Characters/ChyakanIsbel,timid,,,✓
+S1-1100,6. 거짓말과 온기 (메리배드 B),대사,챠칸 이스벨,주눅,(어떻게 대답할까?),,,,,,,,,▼ 강제 선택지 (연출용),Characters/ChyakanIsbel,timid,,,✓
+S1-1110,6. 거짓말과 온기 (메리배드 B),선택지,,,……옆에 좀 앉아요. 제드도 나도 슬슬 쉬어갈 때가 되긴 했죠.,S1-1120,,,,,,,,단일 선택지,,,,,✓
+S1-1120,6. 거짓말과 온기 (메리배드 B),대사,제럴드 앤더슨,화남,응……. 챙겨온 약 중에서 진통제라도 찾아볼까요…?,,,,,,,,,,Characters/GeraldAnderson,angry,,,✓
+S1-1130,6. 거짓말과 온기 (메리배드 B),대사,챠칸 이스벨,주눅,"그런건 됐고, 손 잡아줘요. …절대 놓지 말고.",,,,,,,,,,Characters/ChyakanIsbel,timid,,,✓
+S1-1140,6. 거짓말과 온기 (메리배드 B),대사,내레이터,기본,제럴드는 떨림을 멈춘 채 챠칸의 차가워지는 뺨에 이마를 맞댔다. 어둠이 내린 은신처 안에는 두 사람의 고른 숨소리만이 나란히 잦아들고 있었다.,,,,,,,,,,Characters/Narrator,default,,,✓
+S1-1150,6. 거짓말과 온기 (메리배드 B),엔딩,,,[Merry Bad Ending B] 같은 꿈을 꾸는 밤,,,,ENDING_MERRYBAD_B,,,,,,,,,,✓
+S1-1160,7. 끝없는 내일을 함께 (해피),대사,제럴드 앤더슨,기본,근데 아까 출발하기 전에 무섭다고 했잖아요. 항상 무서웠던 거예요…?,,,,,,,,,,Characters/GeraldAnderson,default,,,✓
+S1-1170,7. 끝없는 내일을 함께 (해피),대사,챠칸 이스벨,웃음,"나도 사람인데, 당연하죠. 근데 제드가 항상 내 뒤에 있어서 늘 용기낼 수 있었어요. 고마워요.",S1-780,,,,,,,,,Characters/ChyakanIsbel,smile,,,✓
