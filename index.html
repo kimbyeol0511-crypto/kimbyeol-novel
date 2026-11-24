@@ -1,0 +1,1870 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title data-i18n="GAME_TITLE_DEFAULT">Game Title</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+/* =========================================================
+   디자인 토큰 (무채색 · 플랫)
+   ========================================================= */
+:root {
+  --graphite: #1C1E21;   /* 화면 바탕 */
+  --slab:     #26292D;   /* 패널 */
+  --slab-a:   rgba(28, 30, 33, 0.92); /* 대사창 */
+  --line:     #3C4046;   /* 구분선 */
+  --mute:     #8C9198;   /* 보조 글자 */
+  --paper:    #E8EAED;   /* 본문 글자 */
+  --white:    #FFFFFF;   /* 강조(반전) */
+
+  --font: "GameFont", "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", "맑은 고딕", sans-serif; /* GameFont = Fonts 폴더의 글꼴, 없으면 다음 글꼴 */
+  --stage-w: 1280px;
+  --stage-h: 720px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 100%; height: 100%; background: #000; overflow: hidden; }
+body {
+  font-family: var(--font);
+  font-style: normal;
+  color: var(--paper);
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+button { font-family: inherit; font-style: normal; color: inherit; background: none; border: 0; cursor: pointer; }
+button:focus-visible, a:focus-visible, input:focus-visible { outline: 2px solid var(--white); outline-offset: 2px; }
+em, i { font-style: normal; }
+
+/* 1280x720 고정 무대를 창 크기에 맞춰 확대·축소 */
+#viewport {
+  position: fixed; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
+}
+#stage {
+  position: relative;
+  width: var(--stage-w); height: var(--stage-h);
+  flex: none;
+  background: var(--graphite);
+  overflow: hidden;
+  transform-origin: center center;
+}
+.screen { position: absolute; inset: 0; display: none; }
+.screen.on { display: block; }
+
+/* =========================================================
+   로딩 / 시작 화면
+   ========================================================= */
+#scr-loading, #scr-splash { background: var(--graphite); }
+.center-col {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px;
+  text-align: center;
+}
+.load-label { font-size: 18px; color: var(--mute); font-weight: 500; }
+.load-bar { width: 420px; height: 6px; background: var(--line); }
+.load-fill { height: 100%; width: 0%; background: var(--white); transition: width 0.1s linear; }
+.splash-hint { font-size: 22px; font-weight: 500; color: var(--paper); }
+/* 엔진 제작자 표기 (시작 전 화면, 라이선스상 지우지 말 것) */
+.credit {
+  position: absolute; left: 0; right: 0; bottom: 48px;
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  font-size: 17px; font-weight: 700; color: var(--paper); pointer-events: none;
+}
+.credit span { font-size: 15px; font-weight: 500; color: var(--mute); }
+.splash-error {
+  max-width: 760px; font-size: 18px; line-height: 1.7; color: var(--paper);
+  background: var(--slab); padding: 28px 32px; text-align: left; white-space: pre-line;
+}
+.splash-error strong { display: block; font-size: 22px; margin-bottom: 8px; color: var(--white); }
+
+/* =========================================================
+   타이틀
+   ========================================================= */
+#scr-title { background: var(--graphite) center / cover no-repeat; }
+#title-shade { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(28,30,33,0.94) 0%, rgba(28,30,33,0.6) 46%, rgba(28,30,33,0) 72%); }
+#title-shade.flat { background: none; }
+#title-block { position: absolute; left: 96px; top: 120px; right: 96px; }
+#title-text {
+  font-size: var(--title-size, 104px); font-weight: 900; line-height: 1.02; letter-spacing: -0.04em;
+  color: var(--title-color, var(--white)); max-width: 760px; word-break: keep-all;
+}
+#title-logo { display: none; max-width: 900px; max-height: 300px; object-fit: contain; object-position: left center; }
+#title-menu { position: absolute; left: 96px; bottom: 132px; display: flex; flex-direction: column; gap: 4px; }
+.menu-btn {
+  position: relative;
+  display: block; min-width: 280px; padding: 12px 0 12px 28px; text-align: left;
+  font-size: var(--menu-size, 28px); font-weight: 700; color: var(--menu-color, var(--mute)); letter-spacing: -0.01em;
+}
+.menu-btn::before {
+  content: ""; position: absolute; left: 0; top: 50%; width: 12px; height: 4px; margin-top: -2px;
+  background: var(--white); transform: scaleX(0); transform-origin: left; transition: transform 0.12s ease-out;
+}
+.menu-btn:hover:not(:disabled), .menu-btn:focus-visible { color: var(--white); outline: none; }
+.menu-btn:hover:not(:disabled)::before, .menu-btn:focus-visible::before { transform: scaleX(1); }
+.menu-btn:disabled { color: var(--line); cursor: default; }
+#title-foot {
+  position: absolute; left: 96px; right: 96px; bottom: 48px;
+  display: flex; align-items: center; gap: 28px; font-size: 15px; color: var(--mute);
+}
+#title-foot .spacer { flex: 1; }
+.text-link { font-size: 15px; font-weight: 500; color: var(--paper); text-decoration: underline; text-underline-offset: 4px; }
+.text-link:hover { color: var(--white); }
+#missing-note { color: var(--paper); }
+#drop-overlay {
+  position: absolute; inset: 24px; display: none;
+  border: 3px dashed var(--white); background: rgba(28,30,33,0.9);
+  align-items: center; justify-content: center; font-size: 28px; font-weight: 700; color: var(--white);
+}
+#drop-overlay.on, .drop-overlay.on { display: flex; }
+.drop-overlay {
+  position: absolute; inset: 24px; display: none; z-index: 3;
+  border: 3px dashed var(--white); background: rgba(28,30,33,0.9);
+  align-items: center; justify-content: center; font-size: 28px; font-weight: 700; color: var(--white);
+}
+.splash-folder {
+  position: absolute; right: 48px; bottom: 40px; z-index: 2;
+  min-width: 200px; padding: 16px 32px; font-size: 22px; font-weight: 700;
+  background: var(--white); color: var(--graphite);
+}
+
+/* =========================================================
+   게임 화면
+   ========================================================= */
+#scr-game { background: #000; cursor: pointer; }
+#bg-layer { position: absolute; inset: 0; }
+#bg-layer img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+#portrait-layer { position: absolute; left: 0; right: 0; bottom: 0; height: 720px; pointer-events: none; }
+/* 캐릭터: 배경과 같은 16:9 화면 전체에 투명 PNG를 겹쳐 띄움 (CONFIG.portraitBox).
+   비율만 같으면 1280×720이든 3840×2160이든 같은 크기로 뜨고, 큰 그림일수록 선명함.
+   날개·파티클처럼 화면 어디에 그려도 그대로 나옴 */
+#portrait {
+  position: absolute; left: 50%; bottom: 0; transform: translateX(-50%);
+  width: var(--portrait-w, 1280px); height: var(--portrait-h, 720px);
+  object-fit: contain; object-position: center bottom;
+  opacity: 0; transition: opacity 0.15s linear;
+}
+#portrait.on { opacity: 1; }
+
+#dialog {
+  position: absolute; left: 48px; right: 48px; bottom: 36px; height: 196px;
+  background: var(--slab-a) center / 100% 100% no-repeat;
+  padding: 20px 48px 0;
+}
+#dialog.skinned { background-color: transparent; }
+#namebox {
+  position: absolute; left: 0; top: -44px; height: 44px; min-width: 168px; padding: 0 20px;
+  display: flex; align-items: center; justify-content: center; white-space: nowrap;
+  background: var(--white);
+  color: var(--name-color, var(--graphite)); font-size: var(--name-size, 32px); font-weight: 700; letter-spacing: 0;
+}
+/* 이름표 이미지: 왼쪽 끝(가로 12%) · 가운데 · 오른쪽 끝 3조각으로 나눠 놓고 가운데만 늘림.
+   조각 사이에 선이 생기지 않게 가운데 조각이 양 끝 조각 밑으로 1px씩 겹치게 깔림 */
+#namebox.skinned { background: none; color: var(--name-color, var(--paper)); padding: 0 28px; }
+#namebox .nb { position: absolute; top: 0; bottom: 0; display: none; pointer-events: none;
+  background-image: var(--nb-img); background-repeat: no-repeat; }
+#namebox.skinned .nb { display: block; }
+#namebox .nb-l { left: 0; width: 21px; z-index: 1; background-size: calc(20px / 0.12) 100%; background-position: left top; }
+#namebox .nb-r { right: 0; width: 21px; z-index: 1; background-size: calc(20px / 0.12) 100%; background-position: right top; }
+#namebox .nb-m { left: 19px; right: 19px; z-index: 0; background-size: calc(100% / 0.76) 100%; background-position: 50% top; }
+#namebox-text { position: relative; z-index: 2; }
+#namebox.hide { display: none; }
+/* 대사: 32px · 줄 높이 44px · 3줄 (에디터가 글자 수를 제한함) */
+#line-text {
+  position: absolute; left: 48px; top: 20px; width: 1088px;
+  font-size: var(--dialog-size, 32px); line-height: var(--dialog-lh, 44px); font-weight: 400; letter-spacing: 0;
+  max-height: 132px; overflow: hidden;
+  color: var(--dialog-color, var(--paper)); white-space: pre-wrap; word-break: keep-all; overflow-wrap: anywhere;
+}
+#line-text.narration { color: var(--dialog-color, #C4C8CD); }
+#next-mark {
+  position: absolute; right: 36px; bottom: 26px; width: 12px; height: 12px; background: var(--white);
+  opacity: 0;
+}
+#next-mark.on { opacity: 1; animation: blink 1s steps(1) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+
+#choices {
+  position: absolute; left: 50%; bottom: 268px; transform: translateX(-50%);
+  width: 760px; display: none; flex-direction: column; gap: 10px;
+}
+#choices.on { display: flex; }
+.choice {
+  display: block; width: 100%; min-height: var(--choice-h, 64px); padding: var(--choice-pad, 14px) 28px; text-align: left;
+  background: var(--slab-a) center / 100% 100% no-repeat;
+  color: var(--choice-color, var(--paper)); font-size: var(--choice-size, 32px); font-weight: 400; line-height: var(--choice-lh, 36px); letter-spacing: 0; word-break: keep-all;
+}
+.choice.skinned { background-color: transparent; }
+.choice.sel, .choice:hover {
+  background-color: var(--white); color: var(--graphite);
+}
+.choice.skinned.sel, .choice.skinned:hover { background-color: transparent; color: var(--choice-color, var(--paper)); }
+
+#btn-settings {
+  position: absolute; top: 24px; right: 24px; width: 56px; height: 56px;
+  background: var(--slab-a) center / 100% 100% no-repeat;
+  display: flex; align-items: center; justify-content: center; z-index: 5;
+}
+#btn-settings.skinned { background-color: transparent; }
+#btn-settings .bars { display: flex; flex-direction: column; gap: 6px; }
+#btn-settings .bars span { display: block; width: 24px; height: 3px; background: var(--white); }
+#btn-settings.skinned .bars { display: none; }
+#btn-settings:hover { background-color: var(--line); }
+#btn-settings.skinned:hover { background-color: transparent; opacity: 0.85; }
+
+/* =========================================================
+   엔딩
+   ========================================================= */
+#scr-ending { background: var(--graphite); }
+/* 엔딩 컷씬: 배경처럼 16:9 화면 전체 (엔딩 탭에서 정함) */
+#ending-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; display: none; }
+#ending-block {
+  position: absolute; left: 140px; top: 220px; width: 1000px; height: 220px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; text-align: center;
+  color: var(--ending-color, var(--white)); text-shadow: 0 2px 12px rgba(0, 0, 0, 0.55);
+}
+#ending-kind { font-size: 20px; font-weight: 700; opacity: 0.7; }
+#ending-title {
+  font-size: var(--ending-size, 64px); font-weight: 900; letter-spacing: -0.035em; line-height: 1.15; word-break: keep-all;
+}
+#ending-count { font-size: 17px; opacity: 0.7; }
+#btn-ending-title {
+  position: absolute; left: 530px; top: 500px; width: 220px; height: 60px; min-width: 0; padding: 0 16px;
+  font-size: var(--endbtn-size, 20px); color: var(--endbtn-color, var(--graphite));
+  background-size: 100% 100%; background-repeat: no-repeat; background-position: center;
+}
+#btn-ending-title.skinned { background-color: transparent; color: var(--endbtn-color, var(--paper)); }
+.solid-btn {
+  min-width: 220px; padding: 16px 32px; font-size: 20px; font-weight: 700;
+  background: var(--white); color: var(--graphite);
+}
+.solid-btn:hover { background: var(--paper); }
+.ghost-btn {
+  min-width: 140px; padding: 14px 28px; font-size: 18px; font-weight: 700;
+  background: transparent; color: var(--paper); box-shadow: inset 0 0 0 2px var(--line);
+}
+.ghost-btn:hover { box-shadow: inset 0 0 0 2px var(--paper); }
+
+/* =========================================================
+   설정 팝업 / 확인창 / 토스트
+   ========================================================= */
+.modal-back {
+  position: absolute; inset: 0; z-index: 20; display: none;
+  background: rgba(0, 0, 0, 0.6); align-items: center; justify-content: center; cursor: default;
+}
+.modal-back.on { display: flex; }
+#settings-panel {
+  width: 560px; background: var(--slab); padding: 36px 40px 32px;
+  display: flex; flex-direction: column; gap: 26px;
+}
+.panel-head { display: flex; align-items: center; justify-content: space-between; }
+.panel-head h2 { font-size: 28px; font-weight: 900; color: var(--white); letter-spacing: -0.02em; }
+.close-x { width: 40px; height: 40px; position: relative; }
+.close-x::before, .close-x::after {
+  content: ""; position: absolute; left: 8px; top: 18px; width: 24px; height: 3px; background: var(--paper);
+}
+.close-x::before { transform: rotate(45deg); }
+.close-x::after { transform: rotate(-45deg); }
+.close-x:hover::before, .close-x:hover::after { background: var(--white); }
+
+.set-row { display: grid; grid-template-columns: 116px 1fr 44px; align-items: center; gap: 16px; }
+.set-row label { font-size: 18px; font-weight: 500; }
+.lang-sel {
+  grid-column: 2 / 4; height: 40px; padding: 0 12px; font-family: inherit; font-size: 16px;
+  background: var(--graphite); color: var(--paper); border: 2px solid var(--line); border-radius: 0; cursor: pointer;
+}
+.lang-sel:focus-visible { outline: 2px solid var(--white); outline-offset: 2px; }
+.set-row output { font-size: 16px; color: var(--mute); text-align: right; font-variant-numeric: tabular-nums; }
+input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; height: 28px; background: transparent; cursor: pointer; }
+input[type=range]::-webkit-slider-runnable-track { height: 4px; background: var(--line); }
+input[type=range]::-moz-range-track { height: 4px; background: var(--line); }
+input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; margin-top: -7px; background: var(--white); border: 0; }
+input[type=range]::-moz-range-thumb { width: 18px; height: 18px; background: var(--white); border: 0; border-radius: 0; }
+.seg { display: grid; grid-template-columns: repeat(4, 1fr); grid-column: 2 / 4; box-shadow: inset 0 0 0 2px var(--line); }
+.seg button { padding: 10px 0; font-size: 16px; font-weight: 500; color: var(--mute); }
+.seg button.on { background: var(--white); color: var(--graphite); font-weight: 700; }
+.seg button:not(.on):hover { color: var(--white); }
+.panel-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.panel-actions.hide { display: none; }
+.panel-actions button { padding: 14px 0; font-size: 18px; font-weight: 700; box-shadow: inset 0 0 0 2px var(--line); }
+.panel-actions button:hover { box-shadow: inset 0 0 0 2px var(--paper); }
+.panel-actions button.primary { background: var(--white); color: var(--graphite); box-shadow: none; }
+.panel-actions button.primary:hover { background: var(--paper); }
+.panel-foot { border-top: 2px solid var(--line); padding-top: 22px; display: flex; flex-direction: column; gap: 8px; }
+.dl-btn {
+  display: block; padding: 14px 0; text-align: center; text-decoration: none;
+  font-size: 18px; font-weight: 700; color: var(--paper); background: var(--graphite);
+}
+.dl-btn:hover { color: var(--white); background: #000; }
+.panel-note { font-size: 14px; color: var(--mute); line-height: 1.6; }
+#endings-panel { width: 600px; background: var(--slab); padding: 36px 40px 32px; display: flex; flex-direction: column; gap: 20px; }
+.endings-top { display: flex; align-items: center; justify-content: space-between; gap: 16px; font-size: 17px; color: var(--mute); }
+.endings-top .ghost-btn { min-width: 0; padding: 10px 18px; font-size: 16px; }
+.ghost-btn:disabled { opacity: 0.4; cursor: default; }
+#endings-list { list-style: none; max-height: 340px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding-right: 4px; }
+#endings-list li { background: var(--graphite); padding: 14px 18px; display: flex; flex-direction: column; gap: 4px; }
+#endings-list li small { font-size: 14px; color: var(--mute); font-weight: 500; }
+#endings-list li b { font-size: 20px; color: var(--paper); font-weight: 700; word-break: keep-all; }
+#endings-list li.empty { background: none; padding: 24px 0; text-align: center; color: var(--mute); font-size: 17px; }
+#endings-list::-webkit-scrollbar { width: 8px; }
+#endings-list::-webkit-scrollbar-thumb { background: var(--line); }
+
+#confirm-panel { width: 520px; background: var(--slab); padding: 36px 40px 30px; display: flex; flex-direction: column; gap: 28px; }
+#confirm-msg { font-size: 21px; line-height: 1.6; color: var(--paper); white-space: pre-line; word-break: keep-all; }
+.confirm-actions { display: flex; justify-content: flex-end; gap: 10px; }
+
+#toast {
+  position: absolute; left: 50%; top: 32px; transform: translate(-50%, -12px); z-index: 30;
+  padding: 14px 28px; background: var(--white); color: var(--graphite); font-size: 18px; font-weight: 700;
+  opacity: 0; pointer-events: none; transition: opacity 0.18s, transform 0.18s; max-width: 900px; text-align: center;
+}
+#toast.on { opacity: 1; transform: translate(-50%, 0); }
+#toast.err { background: #000; color: var(--white); box-shadow: inset 0 0 0 2px var(--white); }
+
+/* 버튼 피드백: 올리면 살짝 밝게, 누르면 살짝 눌림 (UI 이미지에도 그대로 적용) */
+#btn-settings, .choice, .menu-btn, .solid-btn, .ghost-btn, .panel-actions button, .seg button, .dl-btn, .splash-folder, .text-link {
+  transition: transform 0.06s ease-out, filter 0.12s ease-out;
+}
+#btn-settings:hover, .choice:hover, .solid-btn:hover, .ghost-btn:hover, .panel-actions button:hover, .dl-btn:hover, .splash-folder:hover { filter: brightness(1.12); }
+#btn-settings:active, .choice:active, .choice.press, .menu-btn:active:not(:disabled), .solid-btn:active, .ghost-btn:active,
+.panel-actions button:active, .seg button:active, .dl-btn:active, .splash-folder:active, .text-link:active {
+  transform: translateY(2px); filter: brightness(0.9);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; }
+  #next-mark.on { opacity: 1; }
+}
+</style>
+</head>
+<body>
+<div id="viewport">
+  <div id="stage">
+
+    <!-- 로딩 -->
+    <section id="scr-loading" class="screen on" aria-live="polite">
+      <div class="center-col">
+        <div class="load-label" id="load-label" data-i18n="LOADING_RESOURCES">Loading resources</div>
+        <div class="load-bar"><div class="load-fill" id="load-fill"></div></div>
+      </div>
+      <div class="credit" data-i18n-html="CREDIT_MAKER">Made by 돛트 (Dot-teu)<span>X : @Dot_teu</span></div>
+    </section>
+
+    <!-- 클릭해서 시작 -->
+    <section id="scr-splash" class="screen">
+      <div class="center-col">
+        <div class="splash-hint" id="splash-hint" data-i18n="SPLASH_HINT_START">Click the screen to start</div>
+        <div class="splash-error" id="splash-error" hidden></div>
+      </div>
+      <button class="splash-folder" id="btn-splash-folder" hidden data-i18n="BTN_CONNECT_FOLDER">Connect Folder</button>
+      <div class="drop-overlay" id="splash-drop" data-i18n="DROP_GAME_FOLDER">Drop the game folder here</div>
+      <div class="credit" data-i18n-html="CREDIT_MAKER">Made by 돛트 (Dot-teu)<span>X : @Dot_teu</span></div>
+    </section>
+
+    <!-- 타이틀 -->
+    <section id="scr-title" class="screen">
+      <div id="title-shade"></div>
+      <div id="title-block">
+        <img id="title-logo" alt="">
+        <h1 id="title-text" data-i18n="SAMPLE_GAME_TITLE">Eunha Express</h1>
+      </div>
+      <nav id="title-menu">
+        <button class="menu-btn" id="btn-new" data-i18n="BTN_NEW_GAME">New Game</button>
+        <button class="menu-btn" id="btn-load" data-i18n="BTN_LOAD">Load</button>
+        <button class="menu-btn" id="btn-title-settings" data-i18n="BTN_SETTINGS">Settings</button>
+      </nav>
+      <div id="title-foot">
+        <span id="ending-progress"></span>
+        <span id="pack-label"></span>
+        <span id="missing-note"></span>
+        <span class="spacer"></span>
+        <button class="text-link" id="btn-reset-pack" hidden data-i18n="BTN_RESET_PACK">Back to default resources</button>
+        <button class="text-link" id="btn-custom" data-i18n="BTN_LOAD_CUSTOM">Load custom folder</button>
+        <input type="file" id="folder-input" webkitdirectory directory multiple hidden>
+      </div>
+      <div id="drop-overlay" data-i18n="DROP_CUSTOM_FOLDER">Drop the custom folder here</div>
+    </section>
+
+    <!-- 게임 -->
+    <section id="scr-game" class="screen">
+      <div id="bg-layer"><img id="bg-img" alt=""></div>
+      <div id="portrait-layer"><img id="portrait" alt=""></div>
+      <div id="choices" role="listbox" aria-label="Choice" data-i18n-attr="aria-label:LABEL_CHOICE"></div>
+      <div id="dialog">
+        <div id="namebox"><i class="nb nb-m"></i><i class="nb nb-l"></i><i class="nb nb-r"></i><span id="namebox-text"></span></div>
+        <p id="line-text"></p>
+        <div id="next-mark"></div>
+      </div>
+      <button id="btn-settings" aria-label="Open settings" data-i18n-attr="aria-label:ARIA_OPEN_SETTINGS"><span class="bars"><span></span><span></span><span></span></span></button>
+    </section>
+
+    <!-- 엔딩 -->
+    <section id="scr-ending" class="screen">
+      <img id="ending-img" alt="">
+      <div id="ending-block">
+        <div id="ending-kind"></div>
+        <div id="ending-title"></div>
+        <div id="ending-count"></div>
+      </div>
+      <button class="solid-btn" id="btn-ending-title" data-i18n="BTN_TO_MAIN">Main Screen</button>
+    </section>
+
+    <!-- 설정 팝업 (어디서 열어도 같은 팝업) -->
+    <div class="modal-back" id="settings-back">
+      <div id="settings-panel" role="dialog" aria-modal="true" aria-labelledby="settings-h">
+        <div class="panel-head">
+          <h2 id="settings-h" data-i18n="BTN_SETTINGS">Settings</h2>
+          <button class="close-x" id="btn-settings-close" aria-label="Close settings" data-i18n-attr="aria-label:ARIA_CLOSE_SETTINGS"></button>
+        </div>
+        <div class="set-row">
+          <label for="vol-bgm" data-i18n="LABEL_BGM_VOLUME">Music</label>
+          <input type="range" id="vol-bgm" min="0" max="100" step="5">
+          <output id="vol-bgm-out"></output>
+        </div>
+        <div class="set-row">
+          <label for="vol-sfx" data-i18n="LABEL_SFX_VOLUME">Sound FX</label>
+          <input type="range" id="vol-sfx" min="0" max="100" step="5">
+          <output id="vol-sfx-out"></output>
+        </div>
+        <div class="set-row">
+          <label data-i18n="LABEL_TEXT_SPEED">Text speed</label>
+          <div class="seg" id="speed-seg">
+            <button data-speed="20" data-i18n="SPEED_SLOW">Slow</button>
+            <button data-speed="40" data-i18n="SPEED_NORMAL">Normal</button>
+            <button data-speed="80" data-i18n="SPEED_FAST">Fast</button>
+            <button data-speed="0" data-i18n="SPEED_INSTANT">Instant</button>
+          </div>
+        </div>
+        <div class="set-row">
+          <label for="lang-sel">Language</label>
+          <select id="lang-sel" class="lang-sel" aria-label="Language"></select>
+        </div>
+        <div class="panel-actions" id="game-actions">
+          <button class="primary" id="btn-save" data-i18n="BTN_SAVE_GAME">Save</button>
+          <button id="btn-to-title" data-i18n="BTN_TO_MAIN">Main Screen</button>
+        </div>
+        <div class="panel-foot">
+          <button class="dl-btn" id="btn-endings" data-i18n="BTN_ENDING_LIST">Ending List</button>
+          <button class="dl-btn" id="btn-download" data-i18n="BTN_DOWNLOAD_KIT">Download Customizing Kit</button>
+          <p class="panel-note" data-i18n="SETTINGS_KIT_NOTE">Follow ReadMe_제작자용.txt in the downloaded files to change images and dialogue and make your own game.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 확인창 -->
+    <!-- 엔딩 목록 -->
+    <div class="modal-back" id="endings-back">
+      <div id="endings-panel" role="dialog" aria-modal="true" aria-labelledby="endings-h">
+        <div class="panel-head">
+          <h2 id="endings-h" data-i18n="BTN_ENDING_LIST">Ending List</h2>
+          <button class="close-x" id="btn-endings-close" aria-label="Close ending list" data-i18n-attr="aria-label:ARIA_CLOSE_ENDINGS"></button>
+        </div>
+        <div class="endings-top">
+          <span id="endings-count"></span>
+          <button class="ghost-btn" id="btn-endings-clear" data-i18n="BTN_CLEAR_ENDINGS">Delete Ending Records</button>
+        </div>
+        <ul id="endings-list"></ul>
+      </div>
+    </div>
+
+    <div class="modal-back" id="confirm-back">
+      <div id="confirm-panel" role="alertdialog" aria-modal="true">
+        <p id="confirm-msg"></p>
+        <div class="confirm-actions">
+          <button class="ghost-btn" id="btn-confirm-no" data-i18n="BTN_CANCEL">Cancel</button>
+          <button class="solid-btn" id="btn-confirm-yes" style="min-width:140px" data-i18n="BTN_OK">OK</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="toast" role="status"></div>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+/* ======================= 로컬라이징 =======================
+   화면에 보이는 글은 모두 스트링 키(대문자 영어)로 적고, 지금 언어의 열 값을 찾아 씀.
+   표(L10N_DATA)는 이 파일 맨 아래에 있음. 언어를 늘리려면 LANGS에 한 줄, 표의 각 키에 그 언어 열을 추가 */
+const LANGS = [
+  { code: 'en',      name: 'English' },
+  { code: 'ko',      name: '한국어' },
+  { code: 'ja',      name: '日本語' },
+  { code: 'zh-Hans', name: '简体中文' },
+  { code: 'zh-Hant', name: '繁體中文' }
+];
+const LANG_STORE = 'vn-lang';
+let LANG = (() => { // 지금 언어 (기본 영어, 고른 언어는 브라우저에 기억)
+  try { const v = localStorage.getItem(LANG_STORE); if (LANGS.some(l => l.code === v)) return v; } catch (e) {}
+  return 'en';
+})();
+let L10N_CACHE = null;
+function T(key, args) { // 스트링 키 → 지금 언어의 글 ({0}, {1}… 자리에 args)
+  if (!L10N_CACHE) L10N_CACHE = L10N_DATA();
+  const row = L10N_CACHE[key];
+  let s = row ? (row[LANG] ?? row.en ?? key) : key;
+  if (args) s = s.replace(/\{(\d+)\}/g, (m, i) => (args[i] ?? '') + '');
+  return s;
+}
+class LStr { // 파일을 읽을 때 정해지는 값(목록·설정)용: 쓰는 순간의 언어로 바뀜
+  constructor(k, a) { this.k = k; this.a = a; }
+  toString() { return T(this.k, this.a); }
+  valueOf() { return T(this.k, this.a); }
+  toJSON() { return T(this.k, this.a); }
+}
+const L = (k, a) => new LStr(k, a);
+function applyI18n(root) { // HTML에 적어 둔 data-i18n 표시를 지금 언어로
+  root = root || document;
+  root.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = T(el.dataset.i18n); });
+  root.querySelectorAll('[data-i18n-html]').forEach(el => { el.innerHTML = T(el.dataset.i18nHtml); });
+  root.querySelectorAll('[data-i18n-attr]').forEach(el => {
+    el.dataset.i18nAttr.split(';').forEach(p => { const [a, k] = p.split(':'); if (a && k) el.setAttribute(a, T(k)); });
+  });
+  document.documentElement.lang = LANG;
+}
+function setLang(code) { // 언어 바꾸기: 기억하고 화면 글을 모두 다시 씀
+  if (!LANGS.some(l => l.code === code)) return;
+  LANG = code;
+  try { localStorage.setItem(LANG_STORE, code); } catch (e) {}
+  applyI18n();
+  if (typeof onLangChange === 'function') onLangChange();
+}
+function langOptions() { return LANGS.map(l => `<option value="${l.code}"${l.code === LANG ? ' selected' : ''}>${l.name}</option>`).join(''); }
+applyI18n();
+
+/* =========================================================
+   CONFIG — 경로와 이름 규칙은 전부 여기서 관리
+   ========================================================= */
+const CONFIG = {
+  gameTitle: L('GAME_TITLE_DEFAULT'),                    // UI/Layout.json에 제목이 있으면 그 제목을 씀 (에디터에서 바꿈)
+  layoutFile: 'UI/Layout.json',             // 에디터 UI 탭에서 바꾼 위치·크기·글자 설정
+  dialogCsv: 'Dialog/Dialog.csv',          // 게임이 읽는 대사 CSV
+  dialogDir: 'Dialog/',                     // 커스텀 폴더에서 CSV를 못 찾으면 이 폴더의 첫 .csv 사용
+  imageExt: '.png',                         // 캐릭터·배경·UI 이미지 확장자 (소문자)
+  bgDir: 'Backgrounds/',                    // bg_xxx → Backgrounds/xxx.png
+  customPackUrl: 'https://github.com/Dotteu/VisualNovel-Maker',   // 설정 창 ‘커스터마이징 파일 다운로드’ 버튼이 여는 주소
+  narratorNames: ['내레이터'],              // 이름표와 초상화를 숨기는 화자
+  // 글꼴: 있으면 이 글꼴, 없으면 Noto Sans KR. 이름만 같으면 .otf·.woff 내용이어도 읽힘
+  fonts: [
+    { path: 'Fonts/Regular.ttf',   weight: '400' },      // 대사·선택지
+    { path: 'Fonts/Bold.ttf',      weight: '700' },      // 이름표·메뉴
+    { path: 'Fonts/ExtraBold.ttf', weight: '800 900' }   // 메인 화면 제목
+  ],
+  portraitBox: { w: 1280, h: 720 },         // 캐릭터가 뜨는 칸 = 화면 전체. 16:9 투명 PNG로 그리면 크기와 상관없이 배경과 같은 크기로 겹쳐 떠요
+  // UI 이미지: 파일이 있으면 그 이미지로 덮어쓰고, 없으면 기본 플랫 디자인을 사용
+  ui: {
+    TitleBackground: 'UI/TitleBackground.png',       // 1280x720
+    TitleLogo:       'UI/TitleLogo.png',             // 최대 900x300
+    EndingButton:    'UI/EndingButton.png',          // 220x60 (엔딩 화면의 ‘메인 화면으로’)
+    SettingButton:   'UI/SettingButton.png',         // 56x56
+    DialogBox:       'UI/DialogBox.png',             // 1184x196
+    NameBox:         'UI/NameBox.png',               // 168x44 (가로로 늘어남)
+    ChoiceButton:    'UI/ChoiceButton.png',          // 760x64
+    ChoiceButtonSelected: 'UI/ChoiceButtonSelected.png' // 760x64
+  },
+  storagePrefix: 'eunha-vn'
+};
+
+/* =========================================================
+   화면 배치·글자 설정 (UI/Layout.json, 에디터 UI 탭에서 만듦). 없으면 아래 기본값
+   ========================================================= */
+const DEFAULT_LAYOUT = {
+  gameTitle: '',
+  titleBgm: '',      // 메인 화면 BGM 경로 ('' = 메인 BGM, 'none' = 없음)
+  dialogBox:     { x: 48,   y: 488, w: 1184, h: 196 },
+  dialogText:    { x: 96,   y: 508, w: 1088, h: 132 },
+  nameBox:       { x: 48,   y: 444, w: 168,  h: 44 },   // w = 가장 작은 너비 (이름이 길면 늘어남)
+  choice:        { x: 260,  y: 388, w: 760,  h: 64 },   // 맨 아래 선택지. 위로 10px 간격으로 쌓임
+  settingButton: { x: 1200, y: 24,  w: 56,   h: 56 },
+  titleLogo:     { x: 96,   y: 120, w: 900,  h: 300 },
+  titleMenu:     { x: 96,   y: 439 },
+  endingTitle:   { x: 140,  y: 220, w: 1000, h: 220 },  // 엔딩 종류·제목·모은 엔딩 수
+  endingButton:  { x: 530,  y: 500, w: 220,  h: 60 },   // 메인 화면으로 버튼
+  fonts: {
+    dialog: { size: 32,  color: '' }, name: { size: 32, color: '' }, choice: { size: 32, color: '' },
+    title:  { size: 104, color: '' }, menu: { size: 28, color: '' },
+    ending: { size: 64, color: '' }, endButton: { size: 20, color: '' }
+  }
+};
+let Layout = JSON.parse(JSON.stringify(DEFAULT_LAYOUT));
+function mergeLayout(src) {
+  const d = JSON.parse(JSON.stringify(DEFAULT_LAYOUT));
+  if (!src || typeof src !== 'object') return d;
+  const num = (v, min, max) => Number.isFinite(+v) ? Math.min(max, Math.max(min, Math.round(+v))) : null;
+  for (const k of Object.keys(d)) {
+    if (k === 'gameTitle') { if (typeof src.gameTitle === 'string') d.gameTitle = src.gameTitle.trim(); continue; }
+    if (k === 'titleBgm') { if (typeof src.titleBgm === 'string') d.titleBgm = src.titleBgm.trim(); continue; }
+    if (k === 'fonts') {
+      for (const f of Object.keys(d.fonts)) {
+        const sf = src.fonts && src.fonts[f]; if (!sf) continue;
+        const sz = num(sf.size, 8, 300); if (sz) d.fonts[f].size = sz;
+        if (typeof sf.color === 'string' && /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(sf.color.trim())) d.fonts[f].color = sf.color.trim();
+      }
+      continue;
+    }
+    if (!src[k]) continue;
+    for (const p of Object.keys(d[k])) { const v = num(src[k][p], -2000, 4000); if (v !== null) d[k][p] = v; }
+  }
+  return d;
+}
+function applyLayout() {
+  const L = Layout, px = v => v + 'px', st = (el, o) => Object.assign(el.style, o), stage = $('stage');
+  const db = L.dialogBox, dt = L.dialogText, nb = L.nameBox, ch = L.choice, sb = L.settingButton, lg = L.titleLogo, tm = L.titleMenu, F = L.fonts;
+  st($('dialog'), { left: px(db.x), top: px(db.y), width: px(db.w), height: px(db.h), right: 'auto', bottom: 'auto' });
+  st($('namebox'), { left: px(nb.x - db.x), top: px(nb.y - db.y), height: px(nb.h), minWidth: px(nb.w) });
+  st($('line-text'), { left: px(dt.x - db.x), top: px(dt.y - db.y), width: px(dt.w), maxHeight: px(dt.h) });
+  st($('choices'), { left: px(ch.x), bottom: px(720 - (ch.y + ch.h)), width: px(ch.w), transform: 'none' });
+  st($('btn-settings'), { left: px(sb.x), top: px(sb.y), width: px(sb.w), height: px(sb.h), right: 'auto' });
+  st($('title-block'), { left: px(lg.x), top: px(lg.y), width: px(lg.w), height: px(lg.h), right: 'auto' });
+  st($('title-logo'), { maxWidth: px(lg.w), maxHeight: px(lg.h) });
+  st($('title-text'), { maxWidth: px(lg.w) });
+  st($('title-menu'), { left: px(tm.x), top: px(tm.y), bottom: 'auto' });
+  st($('ending-block'), { left: px(L.endingTitle.x), top: px(L.endingTitle.y), width: px(L.endingTitle.w), height: px(L.endingTitle.h) });
+  st($('btn-ending-title'), { left: px(L.endingButton.x), top: px(L.endingButton.y), width: px(L.endingButton.w), height: px(L.endingButton.h) });
+  const dlh = Math.round(F.dialog.size * 1.375), clh = Math.round(F.choice.size * 1.125);
+  const vars = { '--dialog-size': px(F.dialog.size), '--dialog-lh': px(dlh), '--name-size': px(F.name.size),
+    '--choice-size': px(F.choice.size), '--choice-lh': px(clh), '--choice-h': px(ch.h), '--choice-pad': px(Math.max(0, Math.floor((ch.h - clh) / 2))),
+    '--title-size': px(F.title.size), '--menu-size': px(F.menu.size), '--ending-size': px(F.ending.size), '--endbtn-size': px(F.endButton.size) };
+  for (const [k, v] of Object.entries(vars)) stage.style.setProperty(k, v);
+  for (const [f, v] of [['dialog', 'dialog'], ['name', 'name'], ['choice', 'choice'], ['title', 'title'], ['menu', 'menu'], ['ending', 'ending'], ['endButton', 'endbtn']]) {
+    if (F[f].color) stage.style.setProperty(`--${v}-color`, F[f].color); else stage.style.removeProperty(`--${v}-color`);
+  }
+  document.title = gameTitle();
+}
+const gameTitle = () => Layout.gameTitle || CONFIG.gameTitle;
+
+const TYPE_MAP = { '대사': 'line', '선택지': 'choice', '분기': 'branch', '엔딩': 'end',
+                   line: 'line', choice: 'choice', branch: 'branch', end: 'end' };
+const STATE_ON  = ['켜짐', 'on', 'true', '1', 'o', 'y', 'yes'];
+const STATE_OFF = ['꺼짐', 'off', 'false', '0', 'x', 'n', 'no'];
+
+const $ = (id) => document.getElementById(id);
+const log = {
+  warn: (...a) => console.warn('[VN]', ...a),
+  info: (...a) => console.info('[VN]', ...a),
+  error: (...a) => console.error('[VN]', ...a)
+};
+
+/* =========================================================
+   무대 크기 맞추기
+   ========================================================= */
+function applyPortraitBox() {
+  $('stage').style.setProperty('--portrait-w', CONFIG.portraitBox.w + 'px');
+  $('stage').style.setProperty('--portrait-h', CONFIG.portraitBox.h + 'px');
+}
+function fitStage() {
+  const vp = $('viewport');
+  const cs = getComputedStyle(vp);
+  const w = vp.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+  const h = vp.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+  const s = Math.min(w / 1280, h / 720);
+  $('stage').style.transform = `scale(${s})`;
+}
+window.addEventListener('resize', fitStage);
+
+/* =========================================================
+   저장소 (localStorage, 실패해도 게임은 계속)
+   ========================================================= */
+const Store = {
+  get(key, fallback) {
+    try { const v = localStorage.getItem(key); return v == null ? fallback : JSON.parse(v); }
+    catch { return fallback; }
+  },
+  set(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); return true; } catch { return false; } },
+  del(key) { try { localStorage.removeItem(key); } catch {} }
+};
+
+const Settings = Object.assign(
+  { bgm: 70, sfx: 80, speed: 40 },
+  Store.get(CONFIG.storagePrefix + ':settings', {})
+);
+function saveSettings() { Store.set(CONFIG.storagePrefix + ':settings', Settings); }
+
+/* =========================================================
+   CSV 읽기 — RFC 4180 파서 + UTF-8/CP949 자동 판별
+   ========================================================= */
+function decodeCsv(buf) {
+  try {
+    return { text: new TextDecoder('utf-8', { fatal: true }).decode(buf), enc: 'UTF-8' };
+  } catch {
+    log.warn(T('LOG_CSV_NOT_UTF8'));
+    return { text: new TextDecoder('euc-kr').decode(buf), enc: 'CP949' };
+  }
+}
+
+function parseCsv(text) {
+  if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+  const rows = [];
+  let row = [], field = '', inQ = false, i = 0;
+  const n = text.length;
+  while (i < n) {
+    const c = text[i];
+    if (inQ) {
+      if (c === '"') {
+        if (text[i + 1] === '"') { field += '"'; i += 2; continue; }
+        inQ = false; i++; continue;
+      }
+      field += c; i++; continue;
+    }
+    if (c === '"') { inQ = true; i++; continue; }
+    if (c === ',') { row.push(field); field = ''; i++; continue; }
+    if (c === '\r') { i++; continue; }
+    if (c === '\n') { row.push(field); rows.push(row); row = []; field = ''; i++; continue; }
+    field += c; i++;
+  }
+  if (field !== '' || row.length) { row.push(field); rows.push(row); }
+  return rows;
+}
+
+function idOrder(id) {
+  const m = /^S(\d+)-(\d+)$/i.exec(id);
+  return m ? Number(m[1]) * 100000 + Number(m[2]) : null;
+}
+
+function buildScript(table) {
+  if (!table.length) throw new Error(T('ERR_CSV_EMPTY'));
+  const keys = table[0].map(k => k.trim());
+  for (const need of ['id', 'type', 'text', 'next']) {
+    if (!keys.includes(need)) throw new Error(T('ERR_CSV_MISSING_COLUMN', [need]));
+  }
+  const rows = [];
+  for (let r = 1; r < table.length; r++) {
+    const o = {};
+    keys.forEach((k, ci) => { o[k] = (table[r][ci] ?? '').replace(/\r\n?/g, '\n').trim(); });
+    if (!o.id || o.id === 'ID' || o.type === '구분') continue;   // 빈 행, 2행(한글 열 이름) 건너뜀
+    const t = TYPE_MAP[o.type];
+    if (!t) { log.warn(T('LOG_UNKNOWN_TYPE_SKIP', [o.id, o.type])); continue; }
+    o.type = t;
+    rows.push(o);
+  }
+  // id 순서 정렬 (장면번호, 번호)
+  if (rows.every(r => idOrder(r.id) != null)) {
+    rows.sort((a, b) => idOrder(a.id) - idOrder(b.id));
+  } else {
+    log.warn(T('LOG_ID_FORMAT_ORDER'));
+  }
+  const index = new Map();
+  rows.forEach((r, i) => {
+    if (index.has(r.id)) log.error(T('LOG_DUPLICATE_ID', [r.id]));
+    index.set(r.id, i);
+  });
+  // 점검
+  rows.forEach((r, i) => {
+    if (r.next && !index.has(r.next)) log.error(T('LOG_NEXT_ID_MISSING', [r.id, r.next]));
+    if (r.type === 'choice' && !r.next) log.error(T('LOG_CHOICE_NO_NEXT', [r.id]));
+    if (r.type === 'branch' && (!r.next || !r.cond_flag)) log.error(T('LOG_BRANCH_NEEDS', [r.id]));
+    if (r.cond_flag && !r.cond_state) log.warn(T('LOG_EMPTY_STATE_ON', [r.id]));
+    if (r.type === 'choice' && i > 0 && rows[i - 1].type !== 'choice') {
+      const q = rows[i - 1];
+      if (q.type !== 'line' || q.next) log.error(T('LOG_CHOICE_NEEDS_QUESTION', [r.id]));
+    }
+  });
+  // 배경 경로: bg_path 열이 있으면 그것을, 없으면 bg_xxx → Backgrounds/xxx
+  const bgMap = new Map();
+  rows.forEach(r => { if (r.bg && r.bg_path) bgMap.set(r.bg, r.bg_path); });
+  const endings = new Set(rows.filter(r => r.type === 'end').map(r => r.set_flag || r.id));
+  return { rows, index, bgMap, endingTotal: endings.size };
+}
+
+/* =========================================================
+   리소스 — 이름(경로)으로 불러와 미리 캐싱
+   ========================================================= */
+const Live = { bg: null, portrait: null, ending: null }; // 지금 화면에 띄운 배경·캐릭터 주소
+const Assets = {
+  mode: 'web',          // 'web' = 같은 폴더의 파일, 'custom' = 사용자가 고른 폴더
+  rootName: '',
+  files: null,          // Map<상대경로, File>
+  lower: null,          // Map<소문자 경로, 실제 경로> — 대소문자 실수 안내용
+  blobs: [],
+  images: new Map(),    // 경로 → { ok, src }
+  audio: new Map(),     // 경로 → { ok, src }
+  missing: new Set(),
+  fontFaces: [],
+
+  reset() {
+    this.fontFaces.forEach(f => document.fonts.delete(f)); this.fontFaces = [];
+    ['bg', 'portrait', 'ending'].forEach(k => { if (Live[k]) URL.revokeObjectURL(Live[k]); Live[k] = null; });
+    this.blobs.forEach(u => URL.revokeObjectURL(u));
+    this.blobs = []; this.images.clear(); this.audio.clear(); this.missing.clear();
+  },
+  useFolder(entries, rootName) {
+    this.mode = 'custom'; this.rootName = rootName || '커스텀';
+    this.files = new Map(); this.lower = new Map();
+    entries.forEach(({ path, file }) => { this.files.set(path, file); this.lower.set(path.toLowerCase(), path); });
+  },
+  useWeb() { this.mode = 'web'; this.rootName = ''; this.files = null; this.lower = null; },
+
+  // 경로 → 실제로 쓸 URL (없으면 null)
+  url(path) {
+    if (this.mode === 'web') return path.split('/').map(encodeURIComponent).join('/');
+    const f = this.files.get(path);
+    if (f) { const u = URL.createObjectURL(f); this.blobs.push(u); return u; }
+    const near = this.lower.get(path.toLowerCase());
+    if (near) log.warn(T('LOG_CASE_MISMATCH', [path, near]));
+    return null;
+  },
+  async readText(path) {
+    if (this.mode === 'web') {
+      const res = await fetch(this.url(path), { cache: 'no-cache' });
+      if (!res.ok) throw new Error(`${path} (${res.status})`);
+      return decodeCsv(await res.arrayBuffer());
+    }
+    let f = this.files.get(path);
+    if (!f) {
+      const alt = [...this.files.keys()].find(p => p.startsWith(CONFIG.dialogDir) && p.toLowerCase().endsWith('.csv'))
+               || [...this.files.keys()].find(p => p.toLowerCase().endsWith('.csv'));
+      if (alt) { log.warn(T('LOG_CSV_FALLBACK', [path, alt])); f = this.files.get(alt); }
+    }
+    if (!f) throw new Error(T('ERR_FILE_NOT_IN_FOLDER', [path]));
+    return decodeCsv(await f.arrayBuffer());
+  },
+
+  // 배경·캐릭터: .png → .gif → .webp 순으로 찾고 원본을 Blob으로 보관.
+  // 화면에 새로 나타날 때마다 새 주소를 만들어서 움직이는 이미지가 처음부터 재생되게 함
+  async loadAnim(path, kind, optional) {
+    if (this.images.has(path)) return this.images.get(path);
+    const base = path.replace(/\.png$/i, '');
+    for (const ext of ['.png', '.gif', '.webp']) {
+      const p = base + ext, blob = await this.readBlob(p, ext === '.png');
+      if (!blob) continue;
+      try {
+        const bm = await createImageBitmap(blob); const entry = { ok: true, blob, real: p, w: bm.width, h: bm.height }; bm.close && bm.close();
+        this.images.set(path, entry); return entry;
+      } catch { log.warn(T('LOG_IMAGE_READ_FAIL', [p])); }
+    }
+    if (optional) { log.info(T('LOG_NO_CUTSCENE', [path])); const en = { ok: false }; this.images.set(path, en); return en; }
+    this.missing.add(path); log.warn(T('LOG_MISSING_ANIM', [path]));
+    const entry = { ok: false, src: placeholder(kind, path) }; this.images.set(path, entry); return entry;
+  },
+  async readBlob(p, warnCase) {
+    if (this.mode === 'web') {
+      try { const r = await fetch(this.url(p)); return r.ok ? await r.blob() : null; } catch { return null; }
+    }
+    const f = this.files.get(p);
+    if (!f && warnCase) { const near = this.lower.get(p.toLowerCase()); if (near) log.warn(T('LOG_CASE_MISMATCH', [p, near])); }
+    return f || null;
+  },
+  loadImage(path, kind) {
+    if (this.images.has(path)) return Promise.resolve(this.images.get(path));
+    return new Promise(resolve => {
+      const done = (entry) => { this.images.set(path, entry); resolve(entry); };
+      const u = this.url(path);
+      const fail = () => {
+        if (kind === 'ui') { log.info(T('LOG_UI_DEFAULT', [path])); done({ ok: false, src: null }); return; }
+        this.missing.add(path);
+        log.warn(T('LOG_MISSING_RESOURCE', [path]));
+        done({ ok: false, src: placeholder(kind, path) });
+      };
+      if (!u) { fail(); return; }
+      const img = new Image();
+      img.onload = () => done({ ok: true, src: u, w: img.naturalWidth, h: img.naturalHeight });
+      img.onerror = fail;
+      img.src = u;
+    });
+  },
+  async readJson(path) {
+    try {
+      if (this.mode === 'web') { const r = await fetch(this.url(path), { cache: 'no-cache' }); if (!r.ok) return null; return JSON.parse(decodeCsv(await r.arrayBuffer()).text); }
+      const f = this.files.get(path); return f ? JSON.parse(decodeCsv(await f.arrayBuffer()).text) : null;
+    } catch (err) { log.warn(T('LOG_LAYOUT_READ_FAIL', [path, err.message])); return null; }
+  },
+  async loadFont(path, weight) {
+    const u = this.url(path);
+    if (!u) { log.info(T('LOG_FONT_DEFAULT', [path])); return; }
+    try {
+      const face = new FontFace('GameFont', `url("${u}")`, { weight, style: 'normal', display: 'swap' });
+      await face.load(); document.fonts.add(face); this.fontFaces.push(face);
+    } catch { log.info(T('LOG_FONT_READ_FAIL', [path])); }
+  },
+  loadAudio(path) {
+    if (this.audio.has(path)) return Promise.resolve(this.audio.get(path));
+    return new Promise(resolve => {
+      const done = (entry) => { this.audio.set(path, entry); resolve(entry); };
+      const u = this.url(path);
+      if (!u) { log.info(T('LOG_NO_SOUND', [path])); done({ ok: false, src: null }); return; }
+      const a = new Audio();
+      let settled = false;
+      const ok = () => { if (settled) return; settled = true; done({ ok: true, src: u }); };
+      const bad = () => {
+        if (settled) return; settled = true;
+        log.info(T('LOG_NO_SOUND', [path]));
+        done({ ok: false, src: null });
+      };
+      a.preload = 'auto';
+      a.addEventListener('canplaythrough', ok, { once: true });
+      a.addEventListener('loadeddata', ok, { once: true });
+      a.addEventListener('error', bad, { once: true });
+      setTimeout(ok, 6000);   // 느린 회선: 일단 진행하고 재생 때 다시 시도
+      a.src = u;
+      a.load();
+    });
+  },
+  img(path) { return this.images.get(path) || { ok: false, src: placeholder('bg', path) }; },
+  // 새로 나타날 때 쓸 주소 (움직이는 이미지는 처음부터 재생)
+  liveUrl(slot, path, kind) {
+    const e = this.images.get(path);
+    const old = Live[slot]; Live[slot] = null;
+    if (old) setTimeout(() => URL.revokeObjectURL(old), 2000);
+    if (!e || !e.ok) return (e && e.src) || placeholder(kind, path);
+    const u = URL.createObjectURL(e.blob); Live[slot] = u; return u;
+  },
+  snd(path) { return this.audio.get(path) || { ok: false, src: null }; }
+};
+
+function placeholder(kind, path) {
+  const isBg = kind === 'bg';
+  const w = isBg ? 1280 : CONFIG.portraitBox.w, h = isBg ? 720 : CONFIG.portraitBox.h;
+  const esc = path.replace(/[<>&"]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c]));
+  const fw = Math.round(w * 0.32), fh = Math.round(h * 0.9);
+  const body = isBg
+    ? `<rect width="${w}" height="${h}" fill="#2B2E32"/>`
+    : `<rect x="${(w - fw) / 2}" y="${h - fh}" width="${fw}" height="${fh}" fill="#2B2E32" stroke="#8C9198" stroke-width="4" stroke-dasharray="16 10"/>`;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">${body}`
+    + `<text x="50%" y="${isBg ? '40%' : '45%'}" text-anchor="middle" font-family="sans-serif" font-size="${isBg ? 26 : 20}" fill="#8C9198">${T('PLACEHOLDER_NO_FILE')}</text>`
+    + `<text x="50%" y="${isBg ? '46%' : '51%'}" text-anchor="middle" font-family="sans-serif" font-size="${isBg ? 22 : 16}" fill="#C4C8CD">${esc}</text></svg>`;
+  return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+}
+
+/* =========================================================
+   경로 규칙
+   ========================================================= */
+function isNarrator(r) {
+  return CONFIG.narratorNames.includes(r.speaker) || /\/Narrator$/i.test(r.portrait || '');
+}
+function portraitPath(r) {
+  if (!r.portrait || isNarrator(r)) return null;
+  return `${r.portrait}/${r.expr_code || 'default'}${CONFIG.imageExt}`;
+}
+function endingPath(flag) { return 'Endings/' + String(flag).replace(/^ENDING_/, '') + CONFIG.imageExt; } // ENDING_XXX → Endings/XXX.png
+function bgPath(key) {
+  if (!key) return null;
+  const mapped = Game.script.bgMap.get(key);
+  if (mapped) return /\.\w+$/.test(mapped) ? mapped : mapped + CONFIG.imageExt;
+  return CONFIG.bgDir + key.replace(/^bg_/, '') + CONFIG.imageExt;
+}
+
+/* =========================================================
+   전체 로드
+   ========================================================= */
+async function loadEverything() {
+  showScreen('scr-loading');
+  setLoad(0, 1, Assets.mode === 'custom' ? T('LOADING_FOLDER', [Assets.rootName]) : T('LOADING_DIALOGUE'));
+  Assets.reset();
+  Game.script = null;
+
+  let csv;
+  try {
+    csv = await Assets.readText(CONFIG.dialogCsv);
+  } catch (err) {
+    log.error(T('LOG_CSV_READ_FAIL'), err.message);
+    return { ok: false, reason: 'csv', detail: err.message };
+  }
+  try {
+    Game.script = buildScript(parseCsv(csv.text));
+  } catch (err) {
+    log.error(err.message);
+    return { ok: false, reason: 'parse', detail: err.message };
+  }
+  log.info(T('LOG_DIALOGUE_LINES', [Game.script.rows.length, csv.enc]));
+  Layout = mergeLayout(await Assets.readJson(CONFIG.layoutFile));
+  applyLayout();
+
+  // 필요한 리소스 목록
+  const jobs = [];
+  const seen = new Set();
+  const add = (path, fn) => { if (path && path !== 'STOP' && !seen.has(path)) { seen.add(path); jobs.push(() => fn(path)); } };
+  CONFIG.fonts.forEach(f => add(f.path, x => Assets.loadFont(x, f.weight)));
+  if (Layout.titleBgm && Layout.titleBgm !== 'none') add(Layout.titleBgm, x => Assets.loadAudio(x));
+  Object.values(CONFIG.ui).forEach(p => add(p, x => Assets.loadImage(x, 'ui')));
+  for (const r of Game.script.rows) {
+    add(portraitPath(r), x => Assets.loadAnim(x, 'portrait'));
+    add(bgPath(r.bg), x => Assets.loadAnim(x, 'bg'));
+    if (r.type === 'end' && r.set_flag) add(endingPath(r.set_flag), x => Assets.loadAnim(x, 'bg', true));
+    add(r.bgm_path, x => Assets.loadAudio(x));
+    add(r.sfx_path, x => Assets.loadAudio(x));
+  }
+  let done = 0;
+  setLoad(0, jobs.length, T('LOADING_RESOURCES'));
+  const queue = jobs.slice();
+  const worker = async () => {
+    while (queue.length) { await queue.shift()(); done++; setLoad(done, jobs.length, T('LOADING_RESOURCES')); }
+  };
+  await Promise.all(Array.from({ length: 6 }, worker));
+  applySkin();
+  if (Assets.missing.size) log.warn(`${T('LOG_MISSING_FILES', [Assets.missing.size])}
+` + [...Assets.missing].join('\n'));
+  return { ok: true };
+}
+
+function setLoad(n, total, label) {
+  $('load-fill').style.width = (total ? (n / total) * 100 : 0) + '%';
+  $('load-label').textContent = total > 1 ? `${label} ${n} / ${total}` : label;
+}
+
+function applySkin() {
+  const u = (k) => { const e = Assets.images.get(CONFIG.ui[k]); return e && e.ok ? e.src : null; };
+  const set = (el, src) => {
+    el.classList.toggle('skinned', !!src);
+    el.style.backgroundImage = src ? `url("${src}")` : '';
+  };
+  const tb = u('TitleBackground');
+  $('scr-title').style.backgroundImage = tb ? `url("${tb}")` : '';
+  $('title-shade').classList.toggle('flat', !tb);
+  const logo = u('TitleLogo');
+  $('title-logo').style.display = logo ? 'block' : 'none';
+  if (logo) $('title-logo').src = logo;
+  $('title-text').style.display = logo ? 'none' : 'block';
+  $('title-text').textContent = gameTitle();
+  set($('btn-settings'), u('SettingButton'));
+  set($('btn-ending-title'), u('EndingButton'));
+  set($('dialog'), u('DialogBox'));
+  const nb = u('NameBox');
+  $('namebox').classList.toggle('skinned', !!nb);
+  if (nb) $('namebox').style.setProperty('--nb-img', `url("${nb}")`); else $('namebox').style.removeProperty('--nb-img');
+  Skin.choice = u('ChoiceButton');
+  Skin.choiceSel = u('ChoiceButtonSelected');
+}
+const Skin = { choice: null, choiceSel: null };
+
+/* =========================================================
+   사운드 — BGM 채널 1개(루프) + SFX(1회, 겹침 가능)
+   ========================================================= */
+const warnedBgm = new Set();
+const FADE_MS = 700; // BGM이 바뀔 때 페이드 시간
+const Sound = {
+  bgm: null,          // 지금 나오는 BGM (Audio)
+  current: null,      // 그 경로
+  unlocked: false,    // 첫 클릭 이후에만 소리 재생 가능 (브라우저 정책)
+  loop: null, loopPath: null, // 대사가 나오는 동안 반복되는 SFX
+  vol() { return Settings.bgm / 100; },
+  // 음량을 서서히 바꿈 (setInterval이라 탭이 가려져도 끝까지 진행)
+  ramp(a, to, ms, done) {
+    if (a._fade) clearInterval(a._fade);
+    const from = a.volume, t0 = performance.now();
+    a._fade = setInterval(() => {
+      const k = Math.min(1, (performance.now() - t0) / ms);
+      a.volume = Math.max(0, Math.min(1, from + (to - from) * k));
+      if (k >= 1) { clearInterval(a._fade); a._fade = null; if (done) done(); }
+    }, 30);
+  },
+  fadeOut() {
+    const old = this.bgm; this.bgm = null;
+    if (!old) return;
+    if (old.paused) { old.src = ''; return; }
+    this.ramp(old, 0, FADE_MS, () => { old.pause(); old.src = ''; });
+  },
+  setBgm(path) {
+    if (!path) return;
+    if (path === 'STOP') { this.stop(true); return; }
+    if (path === this.current && this.bgm && !this.bgm.paused) return; // 같은 곡이면 끊지 않음
+    const e = Assets.snd(path);
+    this.fadeOut();                // 이전 곡은 서서히 작아지고
+    this.current = path;
+    if (!e.ok) return;
+    const a = new Audio(e.src);    // 새 곡은 서서히 커짐 (겹쳐서 자연스럽게)
+    a.loop = true; a.volume = 0; this.bgm = a;
+    if (this.unlocked) a.play().then(() => this.ramp(a, this.vol(), FADE_MS)).catch(err => log.warn(T('LOG_BGM_PLAY_FAIL'), path, err.message));
+  },
+  stop(fade) {
+    if (fade) this.fadeOut();
+    else if (this.bgm) { if (this.bgm._fade) clearInterval(this.bgm._fade); this.bgm.pause(); this.bgm.src = ''; this.bgm = null; }
+    this.current = null;
+  },
+  sfx(path) {
+    const e = Assets.snd(path);
+    if (!e.ok || !this.unlocked || Settings.sfx === 0) return;
+    const a = new Audio(e.src);
+    a.volume = Settings.sfx / 100;
+    a.play().catch(() => {});
+  },
+  // 반복 SFX: 대사가 바뀌면 페이드 없이 바로 멈춤. 다음 대사도 같은 반복 SFX면 이어서 재생
+  startLoop(path) {
+    if (this.loop && this.loopPath === path) return;
+    this.stopLoop();
+    const e = Assets.snd(path);
+    if (!e.ok || !this.unlocked) return;
+    const a = new Audio(e.src); a.loop = true; a.volume = Settings.sfx / 100;
+    a.play().catch(() => {});
+    this.loop = a; this.loopPath = path;
+  },
+  stopLoop() { if (this.loop) { this.loop.pause(); this.loop.src = ''; } this.loop = null; this.loopPath = null; },
+  applyVolume() {
+    if (this.bgm && !this.bgm._fade) this.bgm.volume = this.vol();
+    if (this.loop) this.loop.volume = Settings.sfx / 100;
+  }
+};
+
+/* =========================================================
+   게임 진행
+   ========================================================= */
+const Game = {
+  script: null,
+  packId: 'default',
+  idx: -1,
+  flags: new Set(),   // FLAG_ : 이번 회차
+  endings: new Set(), // ENDING_ : 영구
+  bg: null,
+  choices: null,      // 지금 줄 다음에 보여줄 선택지
+  sel: -1,
+  busy: false,
+
+  key(name) { return `${CONFIG.storagePrefix}:${this.packId}:${name}`; },
+  loadEndings() { this.endings = new Set(Store.get(this.key('endings'), [])); },
+  saveEndings() { Store.set(this.key('endings'), [...this.endings]); },
+  hasSave() { return !!Store.get(this.key('save'), null); },
+
+  hasFlag(f) { return f.startsWith('ENDING_') ? (this.endings.has(f) || this.flags.has(f)) : this.flags.has(f); },
+  setFlag(f) {
+    if (!f) return;
+    if (f.startsWith('ENDING_')) { this.endings.add(f); this.saveEndings(); }
+    else this.flags.add(f);
+  },
+  cond(r) {
+    if (!r.cond_flag) return true;
+    const s = (r.cond_state || '켜짐').toLowerCase();
+    let want = true;
+    if (STATE_OFF.includes(s)) want = false;
+    else if (!STATE_ON.includes(s)) log.warn(T('LOG_UNKNOWN_STATE', [r.id, r.cond_state]));
+    return this.hasFlag(r.cond_flag) === want;
+  },
+  jump(id, from) {
+    const i = this.script.index.get(id);
+    if (i == null) { fail(T('ERR_NEXT_ID_NOT_FOUND', [from, id])); return -1; }
+    return i;
+  },
+
+  newGame() { // 저장 칸은 건드리지 않음 (저장하기를 눌렀을 때만 바뀜)
+    this.flags = new Set();
+    this.bg = null;
+    Sound.stop(true);
+    clearStage();
+    showScreen('scr-game');
+    this.run(0);
+  },
+  continueGame() {
+    const s = Store.get(this.key('save'), null);
+    if (!s) return;
+    const i = this.script.index.get(s.id);
+    if (i == null) { fail(T('ERR_SAVE_POS_MISSING', [s.id])); return; }
+    this.flags = new Set(s.flags || []);
+    clearStage();
+    showScreen('scr-game');
+    if (s.bg) this.setBg(s.bg);
+    Sound.current = null;
+    if (s.bgm) Sound.setBgm(s.bgm);
+    this.showLine(i, { fromLoad: true });
+    this.unsaved = false;
+  },
+  unsaved: false, // 마지막 저장 뒤에 진행했는지 (메인 화면으로 갈 때·창을 닫을 때 알림)
+  save(silent) {
+    const r = this.script.rows[this.idx];
+    if (!r) return;
+    const ok = Store.set(this.key('save'), {
+      id: r.id, flags: [...this.flags], bg: this.bg, bgm: Sound.current, at: Date.now()
+    });
+    if (ok) this.unsaved = false;
+    if (!silent) toast(ok ? T('TOAST_SAVED') : T('TOAST_SAVE_FAIL'), !ok);
+  },
+
+  // idx부터 화면에 보여줄 줄을 찾아 실행
+  run(idx) {
+    const rows = this.script.rows;
+    for (let guard = 0; guard < 10000; guard++) {
+      const r = rows[idx];
+      if (!r) { fail(T('ERR_NO_ENDING_ROW')); return; }
+      if (r.type === 'branch') {
+        idx = this.cond(r) ? this.jump(r.next, r.id) : idx + 1;
+        if (idx < 0) return;
+        continue;
+      }
+      if (r.type === 'choice') {   // 질문 없이 선택지 줄에 도착한 경우: 묶음 건너뜀
+        log.warn(T('LOG_CHOICE_WITHOUT_QUESTION', [r.id]));
+        while (rows[idx] && rows[idx].type === 'choice') idx++;
+        continue;
+      }
+      if (!this.cond(r)) { idx++; continue; }
+      if (r.type === 'end') { this.ending(r); return; }
+      this.showLine(idx, {});
+      return;
+    }
+    fail(T('ERR_BRANCH_LOOP'));
+  },
+
+  applyFx(r, { sfx = true } = {}) {
+    if (r.bg) this.setBg(r.bg);
+    if (r.bgm_path) Sound.setBgm(r.bgm_path);
+    else if (r.bgm === 'STOP') Sound.stop();
+    else if (r.bgm && !warnedBgm.has(r.bgm)) { warnedBgm.add(r.bgm); log.info(T('LOG_BGM_NO_FILE', [r.bgm])); }
+    if (sfx && r.sfx_path) Sound.sfx(r.sfx_path);
+    if (r.set_flag) this.setFlag(r.set_flag);
+  },
+  setBg(key) {
+    this.bg = key;
+    if (this.shownBg === key) return; // 같은 배경이 이어지면 재생을 끊지 않음
+    this.shownBg = key;
+    $('bg-img').src = Assets.liveUrl('bg', bgPath(key), 'bg');
+  },
+  shownBg: null, shownPortrait: null,
+
+  showLine(idx, { fromLoad = false }) {
+    const rows = this.script.rows;
+    const r = rows[idx];
+    this.idx = idx;
+    if (!fromLoad) this.unsaved = true;
+    const loopPath = r.sfx_path && /^(y|yes|o|1|true|반복)$/i.test(r.sfx_loop || '') ? r.sfx_path : null;
+    if (loopPath) Sound.startLoop(loopPath); else Sound.stopLoop();
+    this.applyFx(r, { sfx: !fromLoad && !loopPath });
+
+    // 질문 대사면 아래 선택지 묶음을 준비
+    this.choices = null; this.sel = -1;
+    hideChoices();
+    if (!r.next && rows[idx + 1] && rows[idx + 1].type === 'choice') {
+      const group = [];
+      for (let j = idx + 1; rows[j] && rows[j].type === 'choice'; j++) group.push(rows[j]);
+      const visible = group.filter(c => this.cond(c));
+      if (!visible.length) { fail(T('ERR_NO_VISIBLE_CHOICE', [r.id])); return; }
+      this.choices = visible;
+    }
+
+    // 이름표 · 초상화
+    const narr = isNarrator(r);
+    $('namebox-text').textContent = r.speaker || '';
+    $('namebox').classList.toggle('hide', narr || !r.speaker);
+    $('line-text').classList.toggle('narration', narr);
+    const pp = portraitPath(r);
+    const pic = $('portrait');
+    if (pp) {
+      if (this.shownPortrait !== pp) { // 새로 나타날 때만 바꾸고 처음부터 재생
+        this.shownPortrait = pp; pic.classList.remove('on');
+        pic.src = Assets.liveUrl('portrait', pp, 'portrait');
+      }
+      requestAnimationFrame(() => pic.classList.add('on'));
+    } else {
+      this.shownPortrait = null;
+      pic.classList.remove('on');
+    }
+
+    Typer.start(r.text, () => this.afterTyping());
+  },
+  afterTyping() {
+    if (this.choices) showChoices(this.choices);
+    else $('next-mark').classList.add('on');
+  },
+
+  // 스페이스 / 클릭
+  act() {
+    if (Typer.typing) { Typer.finish(); return; }
+    if (this.choices) {
+      if (this.sel >= 0 && !this.picking) { // 키보드로 고를 때도 눌리는 모습을 잠깐 보여 줌
+        const c = this.choices[this.sel], btn = $('choices').children[this.sel];
+        if (btn) btn.classList.add('press');
+        this.picking = true;
+        setTimeout(() => { this.picking = false; this.pick(c); }, 90);
+      }
+      return;
+    }
+    const r = this.script.rows[this.idx];
+    if (!r) return;
+    const next = r.next ? this.jump(r.next, r.id) : this.idx + 1;
+    if (next < 0) return;
+    $('next-mark').classList.remove('on');
+    this.run(next);
+  },
+  move(d) {
+    if (!this.choices || Typer.typing || this.picking) return;
+    const n = this.choices.length;
+    this.sel = this.sel < 0 ? (d > 0 ? 0 : n - 1) : (this.sel + d + n) % n;
+    paintChoices();
+  },
+  pick(c) {
+    this.choices = null;
+    hideChoices();
+    this.applyFx(c);
+    const i = this.jump(c.next, c.id);
+    if (i >= 0) this.run(i);
+  },
+
+  ending(r) {
+    this.lastEnding = r;
+    Sound.stopLoop();
+    this.applyFx(r);
+    this.unsaved = false; // 엔딩을 봐도 저장해 둔 진행은 그대로 (저장 직전으로 이어하기 가능)
+    const cut = Assets.images.get(endingPath(r.set_flag || ''));
+    const img = $('ending-img');
+    if (cut && cut.ok) { img.src = Assets.liveUrl('ending', endingPath(r.set_flag), 'bg'); img.style.display = 'block'; }
+    else { img.removeAttribute('src'); img.style.display = 'none'; }
+    const m = /^\[(.+?)\]\s*(.*)$/.exec(r.text || '');
+    $('ending-kind').textContent = m ? m[1] : T('LABEL_ENDING');
+    $('ending-title').textContent = m ? m[2] : (r.text || '');
+    const got = [...this.endings].length;
+    $('ending-count').textContent = T('ENDINGS_COLLECTED', [got, this.script.endingTotal]);
+    Typer.stop();
+    showScreen('scr-ending');
+  }
+};
+
+/* =========================================================
+   타이핑 연출
+   ========================================================= */
+const Typer = {
+  chars: [], shown: 0, timer: null, typing: false, onDone: null, started: 0,
+  start(text, onDone) {
+    this.stop();
+    this.chars = Array.from(text || '');
+    this.shown = 0;
+    this.onDone = onDone;
+    $('next-mark').classList.remove('on');
+    $('line-text').textContent = '';
+    if (Settings.speed === 0 || !this.chars.length) { this.finish(); return; }
+    this.typing = true;
+    this.started = performance.now();
+    const tick = () => {
+      const want = Math.floor((performance.now() - this.started) / 1000 * Settings.speed) + 1;
+      if (want > this.shown) {
+        this.shown = Math.min(want, this.chars.length);
+        $('line-text').textContent = this.chars.slice(0, this.shown).join('');
+      }
+      if (this.shown >= this.chars.length) this.finish();
+    };
+    this.timer = setInterval(tick, 16);
+    tick();
+  },
+  finish() {
+    clearInterval(this.timer); this.timer = null;
+    $('line-text').textContent = this.chars.join('');
+    const was = this.typing || this.onDone;
+    this.typing = false;
+    const cb = this.onDone; this.onDone = null;
+    if (was && cb) cb();
+  },
+  stop() { clearInterval(this.timer); this.timer = null; this.typing = false; this.onDone = null; }
+};
+
+/* =========================================================
+   선택지 UI
+   ========================================================= */
+function showChoices(list) {
+  const box = $('choices');
+  box.innerHTML = '';
+  list.forEach((c, i) => {
+    const b = document.createElement('button');
+    b.className = 'choice';
+    b.textContent = c.text;
+    b.setAttribute('role', 'option');
+    b.addEventListener('click', (e) => { e.stopPropagation(); b.blur(); Game.pick(c); });
+    b.addEventListener('mouseenter', () => { Game.sel = i; paintChoices(); });
+    box.appendChild(b);
+  });
+  box.classList.add('on');
+  paintChoices();
+}
+function paintChoices() {
+  [...$('choices').children].forEach((b, i) => {
+    const on = i === Game.sel;
+    b.classList.toggle('sel', on);
+    b.setAttribute('aria-selected', on);
+    const src = on ? (Skin.choiceSel || Skin.choice) : Skin.choice;
+    b.classList.toggle('skinned', !!src);
+    b.style.backgroundImage = src ? `url("${src}")` : '';
+  });
+}
+function hideChoices() { $('choices').classList.remove('on'); $('choices').innerHTML = ''; }
+
+function clearStage() {
+  Typer.stop();
+  Sound.stopLoop();
+  Game.shownBg = null; Game.shownPortrait = null;
+  hideChoices();
+  $('bg-img').removeAttribute('src');
+  $('portrait').classList.remove('on');
+  $('portrait').removeAttribute('src');
+  $('namebox-text').textContent = '';
+  $('line-text').textContent = '';
+  $('next-mark').classList.remove('on');
+}
+
+/* =========================================================
+   화면 전환 · 팝업 · 토스트
+   ========================================================= */
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.toggle('on', s.id === id));
+}
+function currentScreen() { const s = document.querySelector('.screen.on'); return s ? s.id : ''; }
+
+let toastTimer = null;
+function toast(msg, isErr) {
+  const t = $('toast');
+  t.textContent = msg;
+  t.classList.toggle('err', !!isErr);
+  t.classList.add('on');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('on'), isErr ? 4200 : 1800);
+}
+function fail(msg) { log.error(msg); toast(msg, true); }
+
+function openSettings() {
+  $('lang-sel').innerHTML = langOptions();
+  $('game-actions').classList.toggle('hide', currentScreen() !== 'scr-game');
+  $('vol-bgm').value = Settings.bgm; $('vol-bgm-out').textContent = Settings.bgm;
+  $('vol-sfx').value = Settings.sfx; $('vol-sfx-out').textContent = Settings.sfx;
+  document.querySelectorAll('#speed-seg button').forEach(b => b.classList.toggle('on', Number(b.dataset.speed) === Settings.speed));
+  $('settings-back').classList.add('on');
+  $('btn-settings-close').focus();
+}
+function closeSettings() { $('settings-back').classList.remove('on'); if (document.activeElement) document.activeElement.blur(); }
+function settingsOpen() { return $('settings-back').classList.contains('on'); }
+
+let confirmResolve = null;
+function askConfirm(msg, yesLabel = L('BTN_OK')) {
+  $('confirm-msg').textContent = msg;
+  $('btn-confirm-yes').textContent = yesLabel;
+  $('confirm-back').classList.add('on');
+  $('btn-confirm-no').focus();
+  return new Promise(res => { confirmResolve = res; });
+}
+function closeConfirm(v) {
+  $('confirm-back').classList.remove('on');
+  if (confirmResolve) { confirmResolve(v); confirmResolve = null; }
+}
+function confirmOpen() { return $('confirm-back').classList.contains('on'); }
+
+/* =========================================================
+   타이틀
+   ========================================================= */
+function updateTitleFoot() { // 메인 화면 아래쪽 글 (언어를 바꿀 때도 다시 그림)
+  const s = Game.script;
+  $('ending-progress').textContent = s && s.endingTotal ? T('ENDINGS_COLLECTED', [[...Game.endings].length, s.endingTotal]) : '';
+  $('pack-label').textContent = Assets.mode === 'custom' ? T('CUSTOM_FOLDER_LABEL', [Assets.rootName]) : '';
+  $('missing-note').textContent = Assets.missing.size ? T('MISSING_FILES_NOTE', [Assets.missing.size]) : '';
+}
+function enterTitle() {
+  clearStage();
+  showScreen('scr-title');
+  const s = Game.script;
+  $('btn-new').disabled = !s;
+  $('btn-load').disabled = !s || !Game.hasSave();
+  updateTitleFoot();
+  if (false) $('ending-progress').textContent = s && s.endingTotal ? T('ENDINGS_COLLECTED', [[...Game.endings].length, s.endingTotal]) : '';
+  $('pack-label').textContent = Assets.mode === 'custom' ? T('CUSTOM_FOLDER_LABEL', [Assets.rootName]) : '';
+  $('btn-reset-pack').hidden = Assets.mode !== 'custom' || location.protocol === 'file:'; // 파일로 열었을 때는 돌아갈 기본 리소스가 없음
+  $('missing-note').textContent = Assets.missing.size ? T('MISSING_FILES_NOTE', [Assets.missing.size]) : '';
+  if (s) {
+    const main = s.rows.find(r => r.bgm === 'MAIN' && r.bgm_path) || s.rows.find(r => r.bgm_path && r.bgm_path !== 'STOP');
+    const t = Layout.titleBgm; // 에디터 사운드 탭의 ‘메인 화면 BGM’ (없으면 메인 BGM)
+    if (t === 'none') Sound.stop(true);
+    else if (t) Sound.setBgm(t);
+    else if (main) Sound.setBgm(main.bgm_path);
+  }
+  $('btn-new').focus();
+}
+
+/* =========================================================
+   커스텀 폴더 불러오기 (버튼 / 드래그 앤 드롭)
+   ========================================================= */
+async function readDropEntry(entry, prefix, out) {
+  if (entry.isFile) {
+    const file = await new Promise((res, rej) => entry.file(res, rej));
+    out.push({ path: prefix + entry.name, file });
+  } else if (entry.isDirectory) {
+    const reader = entry.createReader();
+    let batch;
+    do {
+      batch = await new Promise((res, rej) => reader.readEntries(res, rej));
+      for (const e of batch) await readDropEntry(e, prefix + entry.name + '/', out);
+    } while (batch.length);
+  }
+}
+
+async function useCustomFolder(entries, rootName) {
+  if (!entries.length) { toast(T('TOAST_FOLDER_EMPTY'), true); return; }
+  Sound.stop();
+  Assets.useFolder(entries, rootName);
+  Game.packId = 'custom-' + (rootName || 'pack');
+  Game.loadEndings();
+  const res = await loadEverything();
+  if (!res.ok) {
+    Assets.useWeb();
+    Game.packId = 'default';
+    Game.loadEndings();
+    showSplashError(res, true);
+    return;
+  }
+  log.info(T('LOG_CUSTOM_APPLIED', [rootName, entries.length]));
+  splashNeedsFolder = false; $('btn-splash-folder').hidden = true; $('splash-error').hidden = true;
+  Sound.unlocked = true;
+  enterTitle();
+  toast(T('TOAST_CUSTOM_LOADED', [rootName]));
+}
+
+$('folder-input').addEventListener('change', (e) => {
+  const files = [...e.target.files];
+  e.target.value = '';
+  if (!files.length) return;
+  const root = (files[0].webkitRelativePath || '').split('/')[0];
+  const entries = files.map(f => {
+    const rel = f.webkitRelativePath || f.name;
+    return { path: rel.split('/').slice(1).join('/') || f.name, file: f };
+  });
+  useCustomFolder(entries, root);
+});
+
+function setupDrop(screen, overlay) {
+  let depth = 0;
+  screen.addEventListener('dragenter', (e) => { e.preventDefault(); depth++; overlay.classList.add('on'); });
+  screen.addEventListener('dragleave', () => { depth = Math.max(0, depth - 1); if (!depth) overlay.classList.remove('on'); });
+  screen.addEventListener('dragover', (e) => e.preventDefault());
+  screen.addEventListener('drop', async (e) => {
+    e.preventDefault();
+    depth = 0; overlay.classList.remove('on');
+    const items = [...(e.dataTransfer.items || [])].map(it => it.webkitGetAsEntry && it.webkitGetAsEntry()).filter(Boolean);
+    if (!items.length) { toast(T('TOAST_FOLDER_UNREADABLE'), true); return; }
+    const out = [];
+    let root = '커스텀';
+    if (items.length === 1 && items[0].isDirectory) {
+      root = items[0].name;
+      const reader = items[0].createReader();
+      let batch;
+      do {
+        batch = await new Promise((res, rej) => reader.readEntries(res, rej));
+        for (const en of batch) await readDropEntry(en, '', out);
+      } while (batch.length);
+    } else {
+      for (const en of items) await readDropEntry(en, '', out);
+    }
+    Sound.unlocked = true;
+    useCustomFolder(out, root);
+  });
+}
+setupDrop($('scr-title'), $('drop-overlay'));
+setupDrop($('scr-splash'), $('splash-drop'));
+
+/* =========================================================
+   입력 — 물리 키 위치(event.code) 기준
+   ========================================================= */
+const KEY_ACT  = ['Space', 'Enter', 'NumpadEnter'];
+const KEY_UP   = ['KeyW', 'ArrowUp'];
+const KEY_DOWN = ['KeyS', 'ArrowDown'];
+
+document.addEventListener('keydown', (e) => {
+  if (confirmOpen()) {
+    if (e.code === 'Escape') { e.preventDefault(); closeConfirm(false); }
+    return;
+  }
+  if (endingsOpen()) {
+    if (e.code === 'Escape') { e.preventDefault(); closeEndings(); }
+    return;
+  }
+  if (e.code === 'Escape') {
+    const scr = currentScreen();
+    if (settingsOpen()) { e.preventDefault(); closeSettings(); }
+    else if (scr === 'scr-game' || scr === 'scr-title') { e.preventDefault(); openSettings(); }
+    return;
+  }
+  if (settingsOpen()) return;
+
+  const scr = currentScreen();
+  if (scr === 'scr-splash') {
+    if (KEY_ACT.includes(e.code)) { e.preventDefault(); startFromSplash(); }
+    return;
+  }
+  if (scr !== 'scr-game') return;
+  if (KEY_ACT.includes(e.code)) {
+    e.preventDefault();
+    if (e.repeat) return;   // 길게 눌러 여러 줄 넘어가는 것 방지
+    Game.act();
+  } else if (KEY_UP.includes(e.code)) {
+    e.preventDefault(); Game.move(-1);
+  } else if (KEY_DOWN.includes(e.code)) {
+    e.preventDefault(); Game.move(1);
+  }
+});
+
+$('scr-game').addEventListener('click', (e) => {
+  if (e.target.closest('button')) return;
+  if (Game.choices && !Typer.typing) return;   // 선택지는 버튼으로만 고름
+  Game.act();
+});
+
+/* =========================================================
+   버튼 연결
+   ========================================================= */
+$('btn-new').addEventListener('click', () => Game.newGame()); // 저장해 둔 진행은 그대로 남음
+$('btn-load').addEventListener('click', () => Game.continueGame());
+$('btn-title-settings').addEventListener('click', openSettings);
+$('btn-settings').addEventListener('click', (e) => { e.stopPropagation(); e.currentTarget.blur(); openSettings(); });
+$('btn-settings-close').addEventListener('click', closeSettings);
+$('settings-back').addEventListener('click', (e) => { if (e.target === e.currentTarget) closeSettings(); });
+$('btn-save').addEventListener('click', () => { Game.save(false); closeSettings(); });
+$('btn-to-title').addEventListener('click', async () => {
+  if (Game.unsaved) {
+    const yes = await askConfirm(T('CONFIRM_UNSAVED_TO_TITLE'), T('BTN_TO_MAIN'));
+    if (!yes) return;
+  }
+  closeSettings();
+  enterTitle();
+});
+$('btn-ending-title').addEventListener('click', enterTitle);
+// 게임 중에 창을 닫으려 하면 브라우저가 ‘나가시겠어요?’를 물음 (저장하지 않은 진행이 있을 때)
+window.addEventListener('beforeunload', (e) => {
+  if (currentScreen() === 'scr-game' && Game.unsaved) { e.preventDefault(); e.returnValue = ''; }
+});
+$('btn-custom').addEventListener('click', () => $('folder-input').click());
+$('btn-reset-pack').addEventListener('click', async () => {
+  Sound.stop();
+  Assets.useWeb();
+  Game.packId = 'default';
+  Game.loadEndings();
+  const res = await loadEverything();
+  if (!res.ok) { showSplashError(res, true); return; }
+  enterTitle();
+});
+$('btn-confirm-yes').addEventListener('click', () => closeConfirm(true));
+$('btn-confirm-no').addEventListener('click', () => closeConfirm(false));
+
+$('vol-bgm').addEventListener('input', (e) => {
+  Settings.bgm = Number(e.target.value); $('vol-bgm-out').textContent = Settings.bgm;
+  Sound.applyVolume(); saveSettings();
+});
+$('vol-sfx').addEventListener('input', (e) => {
+  Settings.sfx = Number(e.target.value); $('vol-sfx-out').textContent = Settings.sfx; Sound.applyVolume(); saveSettings();
+});
+$('speed-seg').addEventListener('click', (e) => {
+  const b = e.target.closest('button'); if (!b) return;
+  Settings.speed = Number(b.dataset.speed); saveSettings();
+  document.querySelectorAll('#speed-seg button').forEach(x => x.classList.toggle('on', x === b));
+});
+$('lang-sel').addEventListener('change', (e) => setLang(e.target.value));
+// 언어를 바꾸면: 정적인 글은 applyI18n이, 그때그때 만드는 글은 여기서 다시 그림 (진행 상황은 그대로)
+function onLangChange() {
+  document.title = gameTitle();
+  $('title-text').textContent = gameTitle();
+  const scr = currentScreen();
+  if (scr === 'scr-title') updateTitleFoot();
+  if (scr === 'scr-splash') {
+    if (!$('splash-error').hidden && lastSplash) showSplashError(lastSplash[0], lastSplash[1]);
+    else $('splash-hint').textContent = T('SPLASH_HINT_START');
+  }
+  if (scr === 'scr-ending' && Game.script) $('ending-count').textContent = T('ENDINGS_COLLECTED', [[...Game.endings].length, Game.script.endingTotal]);
+  if (endingsOpen()) renderEndings();
+  $('lang-sel').innerHTML = langOptions();
+}
+$('btn-download').addEventListener('click', () => window.open(CONFIG.customPackUrl, '_blank', 'noopener'));
+
+/* ---------- 엔딩 목록 (본 엔딩만 보여 줌) ---------- */
+function endingRows() {
+  const s = Game.script; if (!s) return [];
+  const seen = new Set(), out = [];
+  for (const r of s.rows) {
+    if (r.type !== 'end') continue;
+    const key = r.set_flag || r.id; if (seen.has(key)) continue; seen.add(key);
+    const m = /^\[(.+?)\]\s*(.*)$/.exec(r.text || '');
+    out.push({ key, kind: m ? m[1] : T('LABEL_ENDING'), title: m ? m[2] : (r.text || ''), got: Game.endings.has(key) });
+  }
+  return out;
+}
+function renderEndings() {
+  const all = endingRows(), got = all.filter(e => e.got);
+  $('endings-count').textContent = T('ENDINGS_COLLECTED', [got.length, all.length]);
+  $('endings-list').innerHTML = got.length
+    ? got.map(e => `<li><small>${escapeHtml(e.kind)}</small><b>${escapeHtml(e.title)}</b></li>`).join('')
+      + (all.length > got.length ? `<li class="empty">${T('ENDINGS_UNSEEN_COUNT', [all.length - got.length])}</li>` : '')
+    : `<li class="empty">${T('ENDINGS_NONE')}</li>`;
+  $('btn-endings-clear').disabled = !got.length;
+}
+function openEndings() { renderEndings(); $('endings-back').classList.add('on'); $('btn-endings-close').focus(); }
+function closeEndings() { $('endings-back').classList.remove('on'); }
+function endingsOpen() { return $('endings-back').classList.contains('on'); }
+$('btn-endings').addEventListener('click', openEndings);
+$('btn-endings-close').addEventListener('click', closeEndings);
+$('endings-back').addEventListener('click', (e) => { if (e.target === e.currentTarget) closeEndings(); });
+$('btn-endings-clear').addEventListener('click', async () => {
+  const yes = await askConfirm(T('CONFIRM_CLEAR_ENDINGS'), T('BTN_DELETE'));
+  if (!yes) return;
+  Game.endings = new Set(); Game.saveEndings();
+  renderEndings();
+  if (currentScreen() === 'scr-title' && Game.script) $('ending-progress').textContent = T('ENDINGS_COLLECTED_ZERO', [Game.script.endingTotal]);
+  toast(T('TOAST_ENDINGS_CLEARED'));
+});
+
+/* =========================================================
+   시작
+   ========================================================= */
+let splashNeedsFolder = false; // 대사를 하나도 못 읽은 상태: 메인 화면 대신 폴더 연결부터
+let lastSplash = null;
+function showSplashError(res, fromTitle) {
+  lastSplash = [res, fromTitle];
+  const isFile = location.protocol === 'file:';
+  let body;
+  if (res.reason === 'csv' && isFile && Assets.mode === 'web') {
+    body = `<strong>${T('SPLASH_CONNECT_TITLE')}</strong>`
+      + `${T('SPLASH_SECURITY')}
+`
+      + `${T('SPLASH_PRESS_CONNECT')}
+`
+      + T('SPLASH_DRAG_HINT');
+  } else if (res.reason === 'csv') {
+    body = `<strong>${T('SPLASH_DIALOGUE_NOT_FOUND')}</strong>${T('SPLASH_CSV_LOCATION', [escapeHtml(res.detail), CONFIG.dialogCsv])}`;
+  } else {
+    body = `<strong>${T('SPLASH_DIALOGUE_READ_FAIL')}</strong>${escapeHtml(res.detail)}`;
+  }
+  $('splash-error').innerHTML = body;
+  $('splash-error').hidden = false;
+  splashNeedsFolder = !Game.script;
+  $('btn-splash-folder').hidden = false;
+  $('splash-hint').textContent = splashNeedsFolder ? T('SPLASH_HINT_CONNECT') : T('SPLASH_HINT_BACK');
+  showScreen('scr-splash');
+}
+function escapeHtml(s) { return String(s).replace(/[<>&"]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c])); }
+
+function startFromSplash() {
+  Sound.unlocked = true;
+  // 브라우저 자동재생 정책: 첫 클릭 이후에만 소리 재생 가능
+
+  enterTitle();
+}
+$('scr-splash').addEventListener('click', (e) => {
+  if (e.target.closest('#btn-splash-folder')) return;
+  if (splashNeedsFolder) return; // 폴더를 연결해야 진행
+  startFromSplash();
+});
+$('btn-splash-folder').addEventListener('click', (e) => {
+  e.stopPropagation();
+  Sound.unlocked = true; // 클릭했으니 소리 재생 허용
+  $('folder-input').click();
+});
+
+(async function boot() {
+  applyPortraitBox();
+  fitStage();
+  document.title = gameTitle();
+  Game.loadEndings();
+  const res = await loadEverything();
+  if (!res.ok) { showSplashError(res, false); return; }
+  $('splash-error').hidden = true;
+  $('splash-hint').textContent = T('SPLASH_HINT_START');
+  showScreen('scr-splash');
+})();
+
+// 콘솔 디버그용: VN.jump('S4-070') 처럼 특정 줄로 바로 이동
+window.VN = {
+  Game, Assets, Settings,
+  jump(id) {
+    const i = Game.script && Game.script.index.get(id);
+    if (i == null) return console.warn(T('LOG_UNKNOWN_ID'), id);
+    showScreen('scr-game'); Game.run(i);
+  },
+  flags() { return { run: [...Game.flags], endings: [...Game.endings] }; }
+};
+
+/* ======================= 로컬라이징 표 =======================
+   키: 대문자 영어 스트링 키 / 열: 언어 코드 (en, ko, ja, zh-Hans, zh-Hant). 새 언어는 각 키에 열을 추가 */
+function L10N_DATA() {
+  return {
+    ARIA_CLOSE_ENDINGS: { 'en': "Close ending list", 'ko': "엔딩 목록 닫기", 'ja': "エンディング一覧を閉じる", 'zh-Hans': "关闭结局列表", 'zh-Hant': "關閉結局列表" },
+    ARIA_CLOSE_SETTINGS: { 'en': "Close settings", 'ko': "설정 닫기", 'ja': "設定を閉じる", 'zh-Hans': "关闭设置", 'zh-Hant': "關閉設定" },
+    ARIA_OPEN_SETTINGS: { 'en': "Open settings", 'ko': "설정 열기", 'ja': "設定を開く", 'zh-Hans': "打开设置", 'zh-Hant': "開啟設定" },
+    BTN_CANCEL: { 'en': "Cancel", 'ko': "취소", 'ja': "キャンセル", 'zh-Hans': "取消", 'zh-Hant': "取消" },
+    BTN_CLEAR_ENDINGS: { 'en': "Delete Ending Records", 'ko': "엔딩 기록 삭제", 'ja': "エンディング記録を削除", 'zh-Hans': "删除结局记录", 'zh-Hant': "刪除結局紀錄" },
+    BTN_CONNECT_FOLDER: { 'en': "Connect Folder", 'ko': "폴더 연결", 'ja': "フォルダ接続", 'zh-Hans': "连接文件夹", 'zh-Hant': "連接資料夾" },
+    BTN_DELETE: { 'en': "Delete", 'ko': "삭제", 'ja': "削除", 'zh-Hans': "删除", 'zh-Hant': "刪除" },
+    BTN_DOWNLOAD_KIT: { 'en': "Download Customizing Kit", 'ko': "커스터마이징 파일 다운로드", 'ja': "カスタマイズ用ファイルをダウンロード", 'zh-Hans': "下载自定义文件", 'zh-Hant': "下載自訂檔案" },
+    BTN_ENDING_LIST: { 'en': "Ending List", 'ko': "엔딩 목록", 'ja': "エンディング一覧", 'zh-Hans': "结局列表", 'zh-Hant': "結局列表" },
+    BTN_LOAD: { 'en': "Load", 'ko': "불러오기", 'ja': "ロード", 'zh-Hans': "读取", 'zh-Hant': "讀取" },
+    BTN_LOAD_CUSTOM: { 'en': "Load custom folder", 'ko': "커스텀 폴더 불러오기", 'ja': "カスタムフォルダを読み込む", 'zh-Hans': "读取自定义文件夹", 'zh-Hant': "讀取自訂資料夾" },
+    BTN_NEW_GAME: { 'en': "New Game", 'ko': "새 게임", 'ja': "ニューゲーム", 'zh-Hans': "新游戏", 'zh-Hant': "新遊戲" },
+    BTN_OK: { 'en': "OK", 'ko': "확인", 'ja': "OK", 'zh-Hans': "确定", 'zh-Hant': "確定" },
+    BTN_RESET_PACK: { 'en': "Back to default resources", 'ko': "기본 리소스로 돌아가기", 'ja': "基本リソースに戻す", 'zh-Hans': "恢复默认资源", 'zh-Hant': "恢復預設資源" },
+    BTN_SAVE_GAME: { 'en': "Save", 'ko': "저장하기", 'ja': "セーブ", 'zh-Hans': "保存", 'zh-Hant': "存檔" },
+    BTN_SETTINGS: { 'en': "Settings", 'ko': "설정", 'ja': "設定", 'zh-Hans': "设置", 'zh-Hant': "設定" },
+    BTN_TO_MAIN: { 'en': "Main Screen", 'ko': "메인 화면으로", 'ja': "メイン画面へ", 'zh-Hans': "返回主界面", 'zh-Hant': "返回主畫面" },
+    CONFIRM_CLEAR_ENDINGS: { 'en': "Delete all seen ending records?\nDeleted records cannot be restored.", 'ko': "본 엔딩 기록을 모두 삭제할까요?\n삭제한 기록은 되돌릴 수 없어요.", 'ja': "見たエンディングの記録をすべて削除しますか?\n削除した記録は元に戻せません。", 'zh-Hans': "要删除所有已看结局的记录吗?\n删除的记录无法恢复。", 'zh-Hant': "要刪除所有已看結局的紀錄嗎?\n刪除的紀錄無法復原。" },
+    CONFIRM_UNSAVED_TO_TITLE: { 'en': "Progress after your last save will not be saved.\nGo to the main screen?", 'ko': "마지막으로 저장한 뒤의 진행은 저장되지 않아요.\n메인 화면으로 갈까요?", 'ja': "最後に保存した後の進行は保存されません。\nメイン画面に戻りますか?", 'zh-Hans': "上次存档之后的进度不会保存。\n要回到主界面吗?", 'zh-Hant': "上次存檔之後的進度不會儲存。\n要回到主畫面嗎?" },
+    CREDIT_MAKER: { 'en': "Made by 돛트 (Dot-teu)<span>X : @Dot_teu</span>", 'ko': "제작 돛트 (Dot-teu)<span>X : @Dot_teu</span>", 'ja': "制作 돛트 (Dot-teu)<span>X : @Dot_teu</span>", 'zh-Hans': "制作 돛트 (Dot-teu)<span>X : @Dot_teu</span>", 'zh-Hant': "製作 돛트 (Dot-teu)<span>X : @Dot_teu</span>" },
+    CUSTOM_FOLDER_LABEL: { 'en': "Custom folder: {0}", 'ko': "커스텀 폴더: {0}", 'ja': "カスタムフォルダ: {0}", 'zh-Hans': "自定义文件夹: {0}", 'zh-Hant': "自訂資料夾: {0}" },
+    DROP_CUSTOM_FOLDER: { 'en': "Drop the custom folder here", 'ko': "여기에 커스텀 폴더를 놓으세요", 'ja': "ここにカスタムフォルダを置いてください", 'zh-Hans': "把自定义文件夹放到这里", 'zh-Hant': "把自訂資料夾放到這裡" },
+    DROP_GAME_FOLDER: { 'en': "Drop the game folder here", 'ko': "여기에 게임 폴더를 놓으세요", 'ja': "ここにゲームフォルダを置いてください", 'zh-Hans': "把游戏文件夹放到这里", 'zh-Hant': "把遊戲資料夾放到這裡" },
+    ENDINGS_COLLECTED: { 'en': "Endings collected {0} / {1}", 'ko': "모은 엔딩 {0} / {1}", 'ja': "集めたエンディング {0} / {1}", 'zh-Hans': "已收集结局 {0} / {1}", 'zh-Hant': "已收集結局 {0} / {1}" },
+    ENDINGS_COLLECTED_ZERO: { 'en': "Endings collected 0 / {0}", 'ko': "모은 엔딩 0 / {0}", 'ja': "集めたエンディング 0 / {0}", 'zh-Hans': "已收集结局 0 / {0}", 'zh-Hant': "已收集結局 0 / {0}" },
+    ENDINGS_NONE: { 'en': "No endings seen yet.", 'ko': "아직 본 엔딩이 없어요.", 'ja': "まだ見たエンディングがありません。", 'zh-Hans': "还没有看过的结局。", 'zh-Hant': "還沒有看過的結局。" },
+    ENDINGS_UNSEEN_COUNT: { 'en': "{0} endings not seen yet.", 'ko': "아직 보지 못한 엔딩이 {0}개 있어요.", 'ja': "まだ見ていないエンディングが{0}個あります。", 'zh-Hans': "还有 {0} 个结局没看过。", 'zh-Hant': "還有 {0} 個結局沒看過。" },
+    ERR_BRANCH_LOOP: { 'en': "Branches repeat endlessly. Check the next IDs of the branch rows.", 'ko': "분기가 끝없이 반복돼요. 분기 줄의 다음 ID를 확인하세요.", 'ja': "分岐が無限に繰り返されます。分岐行の次のIDを確認してください。", 'zh-Hans': "分支无限循环。请检查分支行的下一个 ID。", 'zh-Hant': "分支無限循環。請檢查分支列的下一個 ID。" },
+    ERR_CSV_EMPTY: { 'en': "The CSV is empty.", 'ko': "CSV가 비어 있어요.", 'ja': "CSVが空です。", 'zh-Hans': "CSV 是空的。", 'zh-Hant': "CSV 是空的。" },
+    ERR_CSV_MISSING_COLUMN: { 'en': "Row 1 of the CSV has no ‘{0}’ column. Check that you saved the [Dialogue] sheet as is.", 'ko': "CSV 1행에 ‘{0}’ 열이 없어요. [대사] 시트를 그대로 저장했는지 확인하세요.", 'ja': "CSVの1行目に「{0}」列がありません。[台詞]シートをそのまま保存したか確認してください。", 'zh-Hans': "CSV 第 1 行没有“{0}”列。请确认是否按原样保存了[台词]表。", 'zh-Hant': "CSV 第 1 列沒有「{0}」欄。請確認是否按原樣儲存了[台詞]工作表。" },
+    ERR_FILE_NOT_IN_FOLDER: { 'en': "{0} is not in the folder.", 'ko': "{0} 파일이 폴더에 없어요.", 'ja': "{0}がフォルダにありません。", 'zh-Hans': "文件夹中没有 {0}。", 'zh-Hant': "資料夾中沒有 {0}。" },
+    ERR_NEXT_ID_NOT_FOUND: { 'en': "Cannot find next ID ‘{1}’ of {0}.", 'ko': "{0}의 다음 ID ‘{1}’를 찾을 수 없어요.", 'ja': "{0}の次のID「{1}」が見つかりません。", 'zh-Hans': "找不到 {0} 的下一个 ID“{1}”。", 'zh-Hant': "找不到 {0} 的下一個 ID「{1}」。" },
+    ERR_NO_ENDING_ROW: { 'en': "The dialogue ended without an ending row. Check the next ID of the last row.", 'ko': "대사가 끝났는데 엔딩 줄이 없어요. 마지막 줄의 다음 ID를 확인하세요.", 'ja': "台詞が終わりましたがエンディング行がありません。最後の行の次のIDを確認してください。", 'zh-Hans': "台词已结束但没有结局行。请检查最后一行的下一个 ID。", 'zh-Hant': "台詞已結束但沒有結局列。請檢查最後一列的下一個 ID。" },
+    ERR_NO_VISIBLE_CHOICE: { 'en': "{0}: no choices are visible. Add at least one choice without a condition.", 'ko': "{0}: 보이는 선택지가 하나도 없어요. 조건 없는 선택지를 하나 이상 두세요.", 'ja': "{0}: 表示される選択肢がありません。条件のない選択肢を一つ以上置いてください。", 'zh-Hans': "{0}: 没有可显示的选项。请至少放一个没有条件的选项。", 'zh-Hant': "{0}: 沒有可顯示的選項。請至少放一個沒有條件的選項。" },
+    ERR_SAVE_POS_MISSING: { 'en': "The saved position ‘{0}’ is not in the dialogue. If you changed IDs, start a new game.", 'ko': "저장된 위치 ‘{0}’가 대사에 없어요. ID를 바꿨다면 새 게임으로 시작하세요.", 'ja': "保存した位置「{0}」が台詞にありません。IDを変えた場合は新しいゲームで始めてください。", 'zh-Hans': "存档位置“{0}”不在台词中。如果修改过 ID，请开始新游戏。", 'zh-Hant': "存檔位置「{0}」不在台詞中。如果修改過 ID，請開始新遊戲。" },
+    GAME_TITLE_DEFAULT: { 'en': "Game Title", 'ko': "게임 제목", 'ja': "ゲームタイトル", 'zh-Hans': "游戏标题", 'zh-Hant': "遊戲標題" },
+    LABEL_BGM_VOLUME: { 'en': "Music", 'ko': "배경음", 'ja': "BGM", 'zh-Hans': "背景音乐", 'zh-Hant': "背景音樂" },
+    LABEL_CHOICE: { 'en': "Choice", 'ko': "선택지", 'ja': "選択肢", 'zh-Hans': "选项", 'zh-Hant': "選項" },
+    LABEL_ENDING: { 'en': "Ending", 'ko': "엔딩", 'ja': "エンディング", 'zh-Hans': "结局", 'zh-Hant': "結局" },
+    LABEL_SFX_VOLUME: { 'en': "Sound FX", 'ko': "효과음", 'ja': "効果音", 'zh-Hans': "音效", 'zh-Hant': "音效" },
+    LABEL_TEXT_SPEED: { 'en': "Text speed", 'ko': "글자 속도", 'ja': "文字速度", 'zh-Hans': "文字速度", 'zh-Hant': "文字速度" },
+    LOADING_DIALOGUE: { 'en': "Loading dialogue", 'ko': "대사 불러오는 중", 'ja': "台詞を読み込み中", 'zh-Hans': "正在读取台词", 'zh-Hant': "正在讀取台詞" },
+    LOADING_FOLDER: { 'en': "Loading folder ‘{0}’", 'ko': "‘{0}’ 폴더 불러오는 중", 'ja': "フォルダ「{0}」を読み込み中", 'zh-Hans': "正在读取文件夹“{0}”", 'zh-Hant': "正在讀取資料夾「{0}」" },
+    LOADING_RESOURCES: { 'en': "Loading resources", 'ko': "리소스 불러오는 중", 'ja': "リソースを読み込み中", 'zh-Hans': "正在读取资源", 'zh-Hant': "正在讀取資源" },
+    LOG_BGM_NO_FILE: { 'en': "No file is set for BGM ‘{0}’, so the game continues without sound.", 'ko': "BGM ‘{0}’의 파일이 정해지지 않아 소리 없이 진행해요.", 'ja': "BGM「{0}」のファイルが決まっていないため、音なしで進行します。", 'zh-Hans': "BGM“{0}”没有指定文件，将无声音继续。", 'zh-Hant': "BGM「{0}」沒有指定檔案，將無聲音繼續。" },
+    LOG_BGM_PLAY_FAIL: { 'en': "BGM playback failed:", 'ko': "BGM 재생 실패:", 'ja': "BGMの再生に失敗:", 'zh-Hans': "BGM 播放失败:", 'zh-Hant': "BGM 播放失敗:" },
+    LOG_BRANCH_NEEDS: { 'en': "{0}: a branch row needs a condition flag and a next ID.", 'ko': "{0}: 분기 줄에는 조건 플래그와 다음 ID가 필요해요.", 'ja': "{0}: 分岐行には条件フラグと次のIDが必要です。", 'zh-Hans': "{0}: 分支行需要条件旗标和下一个 ID。", 'zh-Hant': "{0}: 分支列需要條件旗標和下一個 ID。" },
+    LOG_CASE_MISMATCH: { 'en': "Letter case differs: needed name ‘{0}’ / name in folder ‘{1}’", 'ko': "대소문자가 달라요: 필요한 이름 ‘{0}’ / 폴더에 있는 이름 ‘{1}’", 'ja': "大文字と小文字が違います: 必要な名前「{0}」/ フォルダの名前「{1}」", 'zh-Hans': "大小写不同: 需要的名称“{0}”/ 文件夹中的名称“{1}”", 'zh-Hant': "大小寫不同: 需要的名稱「{0}」/ 資料夾中的名稱「{1}」" },
+    LOG_CHOICE_NEEDS_QUESTION: { 'en': "{0}: right above a choice there must be a question line with an empty next ID.", 'ko': "{0}: 선택지 바로 위에는 다음 ID가 빈 질문 대사가 있어야 해요.", 'ja': "{0}: 選択肢のすぐ上には、次のIDが空の質問台詞が必要です。", 'zh-Hans': "{0}: 选项正上方必须有下一个 ID 为空的提问台词。", 'zh-Hant': "{0}: 選項正上方必須有下一個 ID 為空的提問台詞。" },
+    LOG_CHOICE_NO_NEXT: { 'en': "{0}: the choice has no next ID.", 'ko': "{0}: 선택지에 다음 ID가 없어요.", 'ja': "{0}: 選択肢に次のIDがありません。", 'zh-Hans': "{0}: 选项没有下一个 ID。", 'zh-Hant': "{0}: 選項沒有下一個 ID。" },
+    LOG_CHOICE_WITHOUT_QUESTION: { 'en': "{0}: reached choices without a question line, so they are skipped.", 'ko': "{0}: 질문 대사 없이 선택지에 도착해서 건너뛰어요.", 'ja': "{0}: 質問台詞なしで選択肢に着いたのでスキップします。", 'zh-Hans': "{0}: 没有提问台词就到达了选项，已跳过。", 'zh-Hant': "{0}: 沒有提問台詞就到達了選項，已略過。" },
+    LOG_CSV_FALLBACK: { 'en': "{0} was not found, so {1} is used as the dialogue file.", 'ko': "{0}이 없어서 {1}를 대사 파일로 사용해요.", 'ja': "{0}がないため、{1}を台詞ファイルとして使います。", 'zh-Hans': "没有 {0}，因此使用 {1} 作为台词文件。", 'zh-Hant': "沒有 {0}，因此使用 {1} 作為台詞檔案。" },
+    LOG_CSV_NOT_UTF8: { 'en': "The CSV was not UTF-8, so it was read again as CP949 (EUC-KR). Saving as ‘CSV UTF-8 (Comma delimited)’ in Excel is recommended.", 'ko': "CSV가 UTF-8이 아니어서 CP949(EUC-KR)로 다시 읽었어요. 엑셀에서 ‘CSV UTF-8(쉼표로 분리)’로 저장하는 걸 권장해요.", 'ja': "CSVがUTF-8ではなかったため、CP949(EUC-KR)で読み直しました。Excelでは「CSV UTF-8(コンマ区切り)」で保存することをおすすめします。", 'zh-Hans': "CSV 不是 UTF-8，已按 CP949(EUC-KR) 重新读取。建议在 Excel 中以“CSV UTF-8(逗号分隔)”保存。", 'zh-Hant': "CSV 不是 UTF-8，已按 CP949(EUC-KR) 重新讀取。建議在 Excel 中以「CSV UTF-8(逗號分隔)」儲存。" },
+    LOG_CSV_READ_FAIL: { 'en': "Could not read the dialogue CSV:", 'ko': "대사 CSV를 읽지 못했어요:", 'ja': "台詞CSVを読み込めませんでした:", 'zh-Hans': "无法读取台词 CSV:", 'zh-Hant': "無法讀取台詞 CSV:" },
+    LOG_CUSTOM_APPLIED: { 'en': "Custom folder ‘{0}’ applied ({1} files)", 'ko': "커스텀 폴더 ‘{0}’ 적용 ({1}개 파일)", 'ja': "カスタムフォルダ「{0}」を適用 ({1}個のファイル)", 'zh-Hans': "已应用自定义文件夹“{0}”({1} 个文件)", 'zh-Hant': "已套用自訂資料夾「{0}」({1} 個檔案)" },
+    LOG_DIALOGUE_LINES: { 'en': "{0} dialogue lines ({1})", 'ko': "대사 {0}줄 ({1})", 'ja': "台詞{0}行 ({1})", 'zh-Hans': "台词 {0} 行 ({1})", 'zh-Hant': "台詞 {0} 列 ({1})" },
+    LOG_DUPLICATE_ID: { 'en': "Duplicate ID: {0}", 'ko': "ID 중복: {0}", 'ja': "IDの重複: {0}", 'zh-Hans': "ID 重复: {0}", 'zh-Hant': "ID 重複: {0}" },
+    LOG_EMPTY_STATE_ON: { 'en': "{0}: the condition state is empty, so it is treated as ‘on’.", 'ko': "{0}: 조건 상태가 비어 있어 ‘켜짐’으로 처리해요.", 'ja': "{0}: 条件の状態が空なので「オン」として扱います。", 'zh-Hans': "{0}: 条件状态为空，按“开启”处理。", 'zh-Hant': "{0}: 條件狀態為空，按「開啟」處理。" },
+    LOG_FONT_DEFAULT: { 'en': "{0} not found → using the default font", 'ko': "{0} 없음 → 기본 글꼴 사용", 'ja': "{0}なし → 基本フォントを使用", 'zh-Hans': "没有 {0} → 使用默认字体", 'zh-Hant': "沒有 {0} → 使用預設字型" },
+    LOG_FONT_READ_FAIL: { 'en': "Could not read {0}, so the default font is used", 'ko': "{0}를 읽지 못해서 기본 글꼴을 써요", 'ja': "{0}を読み込めなかったため、基本フォントを使います", 'zh-Hans': "无法读取 {0}，使用默认字体", 'zh-Hant': "無法讀取 {0}，使用預設字型" },
+    LOG_ID_FORMAT_ORDER: { 'en': "Some rows are not in the ID format (S1-010), so the CSV row order is used as is.", 'ko': "ID 형식(S1-010)이 아닌 줄이 있어서 CSV의 행 순서를 그대로 사용해요.", 'ja': "ID形式(S1-010)ではない行があるため、CSVの行順をそのまま使います。", 'zh-Hans': "有些行不是 ID 格式(S1-010)，因此按 CSV 的行顺序使用。", 'zh-Hant': "有些列不是 ID 格式(S1-010)，因此按 CSV 的列順序使用。" },
+    LOG_IMAGE_READ_FAIL: { 'en': "Could not read {0} as an image.", 'ko': "{0}를 이미지로 읽지 못했어요.", 'ja': "{0}を画像として読み込めませんでした。", 'zh-Hans': "无法将 {0} 读取为图像。", 'zh-Hant': "無法將 {0} 讀取為圖片。" },
+    LOG_LAYOUT_READ_FAIL: { 'en': "Could not read {0}, so the default layout is used: {1}", 'ko': "{0}를 읽지 못해서 기본 배치를 써요: {1}", 'ja': "{0}を読み込めなかったため、基本の配置を使います: {1}", 'zh-Hans': "无法读取 {0}，使用默认布局: {1}", 'zh-Hant': "無法讀取 {0}，使用預設版面: {1}" },
+    LOG_MISSING_ANIM: { 'en': "[Missing resource] {0} (no .gif or .webp either)", 'ko': "[리소스 없음] {0} (.gif, .webp도 없음)", 'ja': "[リソースなし] {0} (.gif・.webpもなし)", 'zh-Hans': "[缺少资源] {0}(也没有 .gif、.webp)", 'zh-Hant': "[缺少資源] {0}(也沒有 .gif、.webp)" },
+    LOG_MISSING_FILES: { 'en': "{0} missing files:", 'ko': "빠진 파일 {0}개:", 'ja': "足りないファイル {0}個:", 'zh-Hans': "缺少 {0} 个文件:", 'zh-Hant': "缺少 {0} 個檔案:" },
+    LOG_MISSING_RESOURCE: { 'en': "[Missing resource] {0}", 'ko': "[리소스 없음] {0}", 'ja': "[リソースなし] {0}", 'zh-Hans': "[缺少资源] {0}", 'zh-Hant': "[缺少資源] {0}" },
+    LOG_NEXT_ID_MISSING: { 'en': "{0}: next ID ‘{1}’ does not exist.", 'ko': "{0}: 다음 ID ‘{1}’가 없어요.", 'ja': "{0}: 次のID「{1}」がありません。", 'zh-Hans': "{0}: 下一个 ID“{1}”不存在。", 'zh-Hant': "{0}: 下一個 ID「{1}」不存在。" },
+    LOG_NO_CUTSCENE: { 'en': "{0} not found → continuing without a cutscene", 'ko': "{0} 없음 → 컷씬 없이 진행", 'ja': "{0}なし → カットシーンなしで進行", 'zh-Hans': "没有 {0} → 不显示过场图继续", 'zh-Hant': "沒有 {0} → 不顯示過場圖繼續" },
+    LOG_NO_SOUND: { 'en': "[No sound] {0} → continuing without sound", 'ko': "[소리 없음] {0} → 소리 없이 진행", 'ja': "[音声なし] {0} → 音なしで進行", 'zh-Hans': "[无声音] {0} → 无声音继续", 'zh-Hant': "[無聲音] {0} → 無聲音繼續" },
+    LOG_UI_DEFAULT: { 'en': "{0} not found → using the default design", 'ko': "{0} 없음 → 기본 디자인 사용", 'ja': "{0}なし → 基本デザインを使用", 'zh-Hans': "没有 {0} → 使用默认设计", 'zh-Hant': "沒有 {0} → 使用預設設計" },
+    LOG_UNKNOWN_ID: { 'en': "No such ID:", 'ko': "없는 ID:", 'ja': "存在しないID:", 'zh-Hans': "不存在的 ID:", 'zh-Hant': "不存在的 ID:" },
+    LOG_UNKNOWN_STATE: { 'en': "{0}: unknown condition state ‘{1}’, treated as ‘on’.", 'ko': "{0}: 조건 상태 ‘{1}’를 몰라서 ‘켜짐’으로 처리해요.", 'ja': "{0}: 条件の状態「{1}」が分からないので「オン」として扱います。", 'zh-Hans': "{0}: 无法识别条件状态“{1}”，按“开启”处理。", 'zh-Hant': "{0}: 無法識別條件狀態「{1}」，按「開啟」處理。" },
+    LOG_UNKNOWN_TYPE_SKIP: { 'en': "{0}: unknown type ‘{1}’ → skipped", 'ko': "{0}: 알 수 없는 구분 ‘{1}’ → 건너뜀", 'ja': "{0}: 不明な区分「{1}」→ スキップ", 'zh-Hans': "{0}: 未知的类型“{1}”→ 已跳过", 'zh-Hant': "{0}: 未知的類型「{1}」→ 已略過" },
+    MISSING_FILES_NOTE: { 'en': "{0} missing files (see the list in the F12 console)", 'ko': "빠진 파일 {0}개 (F12 콘솔에서 목록 확인)", 'ja': "足りないファイル {0}個 (F12コンソールで一覧を確認)", 'zh-Hans': "缺少 {0} 个文件(在 F12 控制台查看列表)", 'zh-Hant': "缺少 {0} 個檔案(在 F12 主控台查看清單)" },
+    PLACEHOLDER_NO_FILE: { 'en': "File not found", 'ko': "파일 없음", 'ja': "ファイルなし", 'zh-Hans': "没有文件", 'zh-Hant': "沒有檔案" },
+    SAMPLE_GAME_TITLE: { 'en': "Eunha Express", 'ko': "은하 익스프레스", 'ja': "銀河エクスプレス", 'zh-Hans': "银河特快", 'zh-Hant': "銀河特快" },
+    SETTINGS_KIT_NOTE: { 'en': "Follow ReadMe_제작자용.txt in the downloaded files to change images and dialogue and make your own game.", 'ko': "받은 파일의 ReadMe_제작자용.txt를 따라 이미지와 대사를 바꿔 나만의 게임을 만들 수 있어요.", 'ja': "ダウンロードしたファイルの ReadMe_제작자용.txt に従って画像と台詞を変え、自分だけのゲームを作れます。", 'zh-Hans': "按照下载文件中的 ReadMe_제작자용.txt 替换图像和台词，就能制作属于自己的游戏。", 'zh-Hant': "按照下載檔案中的 ReadMe_제작자용.txt 替換圖片和台詞，就能製作屬於自己的遊戲。" },
+    SPEED_FAST: { 'en': "Fast", 'ko': "빠르게", 'ja': "速い", 'zh-Hans': "快", 'zh-Hant': "快" },
+    SPEED_INSTANT: { 'en': "Instant", 'ko': "즉시", 'ja': "瞬時", 'zh-Hans': "立即", 'zh-Hant': "立即" },
+    SPEED_NORMAL: { 'en': "Normal", 'ko': "보통", 'ja': "普通", 'zh-Hans': "普通", 'zh-Hant': "普通" },
+    SPEED_SLOW: { 'en': "Slow", 'ko': "느리게", 'ja': "遅い", 'zh-Hans': "慢", 'zh-Hant': "慢" },
+    SPLASH_CONNECT_TITLE: { 'en': "Please connect the game folder", 'ko': "게임 폴더를 연결해 주세요", 'ja': "ゲームフォルダを接続してください", 'zh-Hans': "请连接游戏文件夹", 'zh-Hant': "請連接遊戲資料夾" },
+    SPLASH_CSV_LOCATION: { 'en': "{0}\nThe dialogue CSV must be at {1}.", 'ko': "{0}\n대사 CSV는 {1} 위치에 있어야 해요.", 'ja': "{0}\n台詞CSVは {1} にある必要があります。", 'zh-Hans': "{0}\n台词 CSV 必须位于 {1}。", 'zh-Hant': "{0}\n台詞 CSV 必須位於 {1}。" },
+    SPLASH_DIALOGUE_NOT_FOUND: { 'en': "Could not find the dialogue file", 'ko': "대사 파일을 찾지 못했어요", 'ja': "台詞ファイルが見つかりませんでした", 'zh-Hans': "找不到台词文件", 'zh-Hant': "找不到台詞檔案" },
+    SPLASH_DIALOGUE_READ_FAIL: { 'en': "Could not read the dialogue file", 'ko': "대사 파일을 읽지 못했어요", 'ja': "台詞ファイルを読み込めませんでした", 'zh-Hans': "无法读取台词文件", 'zh-Hant': "無法讀取台詞檔案" },
+    SPLASH_DRAG_HINT: { 'en': "(You can also drag the folder onto this screen.)", 'ko': "(폴더를 이 화면에 끌어다 놓아도 돼요.)", 'ja': "(フォルダをこの画面にドラッグしてもかまいません。)", 'zh-Hans': "(也可以把文件夹拖到此画面上。)", 'zh-Hant': "(也可以把資料夾拖到此畫面上。)" },
+    SPLASH_HINT_BACK: { 'en': "Click the screen to return to the main screen", 'ko': "화면을 클릭하면 메인 화면으로 돌아가요", 'ja': "画面をクリックするとメイン画面に戻ります", 'zh-Hans': "点击画面返回主界面", 'zh-Hant': "點擊畫面返回主畫面" },
+    SPLASH_HINT_CONNECT: { 'en': "Connect a folder to open the main screen", 'ko': "폴더를 연결하면 메인 화면이 열려요", 'ja': "フォルダを接続するとメイン画面が開きます", 'zh-Hans': "连接文件夹后将打开主界面", 'zh-Hant': "連接資料夾後將開啟主畫面" },
+    SPLASH_HINT_START: { 'en': "Click the screen to start", 'ko': "화면을 클릭하면 시작해요", 'ja': "画面をクリックすると始まります", 'zh-Hans': "点击画面开始", 'zh-Hant': "點擊畫面開始" },
+    SPLASH_PRESS_CONNECT: { 'en': "Press ‘Connect Folder’ at the bottom right and select the folder that contains index.html.", 'ko': "오른쪽 아래 ‘폴더 연결’을 누르고 index.html이 들어 있는 폴더를 선택하세요.", 'ja': "右下の「フォルダ接続」を押して、index.htmlが入っているフォルダを選択してください。", 'zh-Hans': "请点击右下角的“连接文件夹”，选择包含 index.html 的文件夹。", 'zh-Hant': "請點擊右下角的「連接資料夾」，選擇包含 index.html 的資料夾。" },
+    SPLASH_SECURITY: { 'en': "For browser security, opening the HTML file directly cannot read the dialogue and resources.", 'ko': "브라우저 보안 때문에 HTML 파일을 직접 열면 대사와 리소스를 읽지 못해요.", 'ja': "ブラウザのセキュリティのため、HTMLファイルを直接開くと台詞とリソースを読み込めません。", 'zh-Hans': "出于浏览器安全限制，直接打开 HTML 文件无法读取台词和资源。", 'zh-Hant': "基於瀏覽器安全限制，直接開啟 HTML 檔案無法讀取台詞和資源。" },
+    TOAST_CUSTOM_LOADED: { 'en': "Loaded custom folder ‘{0}’", 'ko': "커스텀 폴더 ‘{0}’를 불러왔어요", 'ja': "カスタムフォルダ「{0}」を読み込みました", 'zh-Hans': "已读取自定义文件夹“{0}”", 'zh-Hant': "已讀取自訂資料夾「{0}」" },
+    TOAST_ENDINGS_CLEARED: { 'en': "Ending records deleted", 'ko': "엔딩 기록을 삭제했어요", 'ja': "エンディングの記録を削除しました", 'zh-Hans': "已删除结局记录", 'zh-Hant': "已刪除結局紀錄" },
+    TOAST_FOLDER_EMPTY: { 'en': "The folder is empty.", 'ko': "폴더가 비어 있어요.", 'ja': "フォルダが空です。", 'zh-Hans': "文件夹是空的。", 'zh-Hant': "資料夾是空的。" },
+    TOAST_FOLDER_UNREADABLE: { 'en': "Cannot read the folder. Use the ‘Connect Folder’ button.", 'ko': "폴더를 읽을 수 없어요. ‘폴더 연결’ 버튼을 사용하세요.", 'ja': "フォルダを読み込めません。「フォルダ接続」ボタンを使ってください。", 'zh-Hans': "无法读取文件夹。请使用“连接文件夹”按钮。", 'zh-Hant': "無法讀取資料夾。請使用「連接資料夾」按鈕。" },
+    TOAST_SAVED: { 'en': "Saved", 'ko': "저장했어요", 'ja': "保存しました", 'zh-Hans': "已保存", 'zh-Hant': "已儲存" },
+    TOAST_SAVE_FAIL: { 'en': "Could not save. Check your browser storage settings.", 'ko': "저장하지 못했어요. 브라우저 저장 공간 설정을 확인하세요.", 'ja': "保存できませんでした。ブラウザの保存領域の設定を確認してください。", 'zh-Hans': "无法保存。请检查浏览器存储设置。", 'zh-Hant': "無法儲存。請檢查瀏覽器儲存設定。" }
+  };
+}
+</script>
+</body>
+</html>
